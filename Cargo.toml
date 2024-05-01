@@ -1,0 +1,26 @@
+[package]
+name = "orpheus"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+poise = "0.6.1"
+
+tokio = { version = "1.25.1", features = ["rt-multi-thread"] }
+dotenvy = "0.15.7"
+serde = "1.0.199"
+
+[dependencies.serenity]
+default-features = false
+features = [
+"builder",
+"client",
+"gateway",
+"model",
+"utils",
+"collector",
+"framework",
+]
+version = "0.12.0"
