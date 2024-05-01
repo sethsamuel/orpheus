@@ -3,56 +3,9 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use poise::serenity_prelude as serenity;
 
-struct Data {
-    poise_mentions: AtomicU32,
-} // User data, which is stored and accessible in all command invocations
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
-
-#[derive(serde::Serialize)]
-struct ThreadOptions {
-    name: String,
-}
-
-/// Displays your or another user's account creation date
-#[poise::command(slash_command, prefix_command)]
-async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    ctx.say(response).await?;
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-async fn start_thread(ctx: Context<'_>) -> Result<(), Error> {
-    println!("Starting thread");
-    let res = ctx
-        .http()
-        .create_thread(
-            ctx.channel_id(),
-            &ThreadOptions {
-                name: "New Thread".to_string(),
-            },
-            Some("Time to schedule"),
-        )
-        .await;
-    match res {
-        Ok(c) => {
-            println!("Created {c}");
-            let _ = c.id.say(ctx.http(), "Hi thread").await;
-            let _ = ctx.say(format!("Created a new thread <#{}>", c.id)).await;
-        }
-        Err(err) => {
-            println!("Error {err}");
-            let _ = ctx.say("Something went wrong :(").await;
-        }
-    }
-    println!("Command handled");
-    Ok(())
-}
+mod types;
+use types::{Error, State};
+mod start_thread;
 
 #[tokio::main]
 async fn main() {
@@ -64,7 +17,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), start_thread()],
+            commands: vec![start_thread::start_thread()],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
@@ -73,7 +26,7 @@ async fn main() {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
+                Ok(State {
                     poise_mentions: AtomicU32::new(0),
                 })
             })
@@ -89,8 +42,8 @@ async fn main() {
 async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
-    _framework: poise::FrameworkContext<'_, Data, Error>,
-    data: &Data,
+    _framework: poise::FrameworkContext<'_, State, Error>,
+    data: &State,
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
@@ -109,6 +62,12 @@ async fn event_handler(
                     )
                     .await?;
             }
+        }
+        serenity::FullEvent::ReactionAdd { add_reaction } => {
+            println!(
+                "New reaction {} to {}",
+                add_reaction.emoji, add_reaction.message_id
+            )
         }
         _ => {}
     }
