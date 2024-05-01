@@ -1,1 +1,1 @@
-![Build](https://github.com/sethsamuel/orpheus/actions/workflows/blank.yml/badge.svg)
+[![Build Status](https://github.com/sethsamuel/orpheus/actions/workflows/blank.yml/badge.svg)](https://github.com/sethsamuel/orpheus/actions/workflows/blank.yml)
