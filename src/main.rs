@@ -1,3 +1,4 @@
+use ::serenity::all::CacheHttp;
 use dotenvy::dotenv;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -5,6 +6,9 @@ use poise::serenity_prelude as serenity;
 
 mod types;
 use types::{Error, State};
+
+use crate::poll::poll::Poll;
+mod poll;
 mod start_thread;
 
 #[tokio::main]
@@ -64,6 +68,9 @@ async fn event_handler(
             }
         }
         serenity::FullEvent::ReactionAdd { add_reaction } => {
+            let message = add_reaction.message(ctx.http()).await.unwrap();
+            let poll = Poll::try_from(message.content).unwrap();
+            println!("{:?}", poll);
             println!(
                 "New reaction {} to {}",
                 add_reaction.emoji, add_reaction.message_id
