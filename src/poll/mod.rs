@@ -82,11 +82,11 @@ impl From<Poll> for String {
 mod tests {
     use chrono::NaiveDate;
 
-    use crate::poll::FromStringError;
+    use super::FromStringError;
 
     #[test]
     fn test_froms() {
-        use crate::Poll;
+        use super::Poll;
         let poll = Poll {
             event_name: "My event!".to_string(),
             host: 123451234.into(),

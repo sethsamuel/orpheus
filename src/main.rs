@@ -1,14 +1,13 @@
-use ::serenity::all::CacheHttp;
 use dotenvy::dotenv;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
 
 use poise::serenity_prelude as serenity;
 
 mod types;
 use types::{Error, State};
 
-use crate::poll::Poll;
 mod commands;
+mod handlers;
 mod poll;
 
 #[tokio::main]
@@ -53,33 +52,15 @@ async fn event_handler(
     data: &State,
 ) -> Result<(), Error> {
     match event {
-        serenity::FullEvent::Ready { data_about_bot, .. } => {
-            println!("Logged in as {}", data_about_bot.user.name);
-        }
+        serenity::FullEvent::Ready { data_about_bot, .. } => handlers::on_ready(data_about_bot),
         serenity::FullEvent::Message { new_message } => {
-            println!("New message: {}", new_message.content);
-            if new_message.content.to_lowercase().contains("poise")
-                && new_message.author.id != ctx.cache.current_user().id
-            {
-                let old_mentions = data.poise_mentions.fetch_add(1, Ordering::SeqCst);
-                new_message
-                    .reply(
-                        ctx,
-                        format!("Poise has been mentioned {} times", old_mentions + 1),
-                    )
-                    .await?;
-            }
+            handlers::on_message(new_message, ctx, event, data).await
         }
+
         serenity::FullEvent::ReactionAdd { add_reaction } => {
-            let message = add_reaction.message(ctx.http()).await.unwrap();
-            let poll = Poll::try_from(message.content).unwrap();
-            println!("{:?}", poll);
-            println!(
-                "New reaction {} to {}",
-                add_reaction.emoji, add_reaction.message_id
-            )
+            handlers::on_reaction_add(add_reaction, ctx, event, data).await
         }
-        _ => {}
+
+        _ => Ok(()),
     }
-    Ok(())
 }
