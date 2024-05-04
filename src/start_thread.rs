@@ -1,7 +1,7 @@
 use crate::poll::consts::{FINISHED, NUMBERS};
 use crate::poll::poll::Poll;
 use crate::types::{Context, Error};
-use chrono::{Days, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+use chrono::{DateTime, Days, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 
 #[derive(serde::Serialize)]
 struct ThreadOptions {
@@ -35,27 +35,20 @@ pub async fn start_thread(
                 _ => None,
             };
             let start_date = match parsed {
-                Some(start) => Local
-                    .from_local_datetime(&NaiveDateTime::new(
-                        start,
-                        NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
-                    ))
-                    .unwrap(),
-                _ => Local::now(),
+                Some(_) => parsed.unwrap(),
+                _ => Utc::now().naive_local().date(),
             };
             let end_date = start_date
                 .checked_add_days(Days::new(days.unwrap_or(1)))
                 .unwrap();
-            let start = start_date
-                .with_time(NaiveTime::from_hms_opt(19, 0, 0).unwrap())
-                .unwrap();
+            // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
 
             let host: serenity::model::prelude::UserId = ctx.author().id;
             let poll = Poll {
-                host: host,
+                host,
                 event_name: name,
-                end_date: end_date,
-                start_date: start,
+                end_date,
+                start_date,
             };
             let message_str: String = poll.into();
 
