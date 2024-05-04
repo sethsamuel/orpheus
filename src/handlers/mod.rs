@@ -1,7 +1,3 @@
-use ::serenity::futures::future::join_all;
-use tokio::pin;
-use tokio::task::JoinSet;
-
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Reaction;
 use ::serenity::all::ReactionType;
@@ -69,7 +65,7 @@ pub async fn on_reaction_change(
         .collect::<Vec<UserId>>();
     let mut users_map: HashMap<&NumberEmojis, Vec<UserId>> = HashMap::new();
 
-    for (_, n) in NUMBERS.iter().enumerate() {
+    for n in NUMBERS.iter() {
         let reaction_type = Box::pin(ReactionType::Unicode(n.as_str().to_string()));
 
         let f =
@@ -88,15 +84,11 @@ pub async fn on_reaction_change(
 
     let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
 
-    for (_, n) in NUMBERS.iter().enumerate() {
-        day_counts.insert(&n, 0);
-        users_map
-            .get(&n)
-            .unwrap_or(&vec![])
-            .into_iter()
-            .for_each(|_| {
-                day_counts.entry(&n).and_modify(|v| *v += 1);
-            });
+    for n in NUMBERS.iter() {
+        day_counts.insert(n, 0);
+        users_map.get(&n).unwrap_or(&vec![]).iter().for_each(|_| {
+            day_counts.entry(n).and_modify(|v| *v += 1);
+        });
     }
     println!("{:?}", day_counts);
 
