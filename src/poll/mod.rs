@@ -44,9 +44,12 @@ impl From<Poll> for String {
         let mut message_str = "".to_string();
         message_str += value.welcome_line().as_str();
         message_str += "\n";
+        message_str += "\n";
         message_str += value.host_line().as_str();
         message_str += "\n";
+        message_str += "\n";
         message_str += value.ends_at_line().as_str();
+        message_str += "\n";
         message_str += "\n";
 
         let date_format = "%a, %b %d at %I%P";
@@ -64,6 +67,7 @@ impl From<Poll> for String {
             message_str += format!("{emoji} {clean}\n").as_str();
         }
         message_str += format!("\nTo lock in your availability, hit {FINISHED}").as_str();
+        message_str += "\n";
         message_str += "\n";
         message_str += "Orpehus Magic String (feel free to ignore):";
         message_str += "\n";

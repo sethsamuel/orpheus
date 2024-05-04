@@ -1,10 +1,17 @@
-
-
+use ::serenity::futures::future::join_all;
+use tokio::pin;
+use tokio::task::JoinSet;
 
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Reaction;
+use ::serenity::all::ReactionType;
+use ::serenity::all::UserId;
 use poise::serenity_prelude as serenity;
+use std::collections::HashMap;
 
+use crate::poll::consts::NumberEmojis;
+use crate::poll::consts::FINISHED;
+use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
 
 use super::types::{Error, State};
@@ -38,7 +45,7 @@ pub async fn on_reaction_change(
 
     let _lock = data.lock.lock();
     let message = reaction.message(ctx.http()).await.unwrap();
-    let poll = Poll::try_from(message.content).unwrap();
+    let poll = Poll::try_from(message.content.clone()).unwrap();
     println!("{:?}", poll);
     println!(
         "New reaction by {} {} to {}",
@@ -46,6 +53,52 @@ pub async fn on_reaction_change(
         reaction.emoji,
         reaction.message_id
     );
+
+    let complete_users = message
+        .reaction_users(
+            ctx.http(),
+            ReactionType::Unicode(FINISHED.to_string()),
+            None,
+            None,
+        )
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|u| u.id)
+        .filter(|id| *id != bot_id)
+        .collect::<Vec<UserId>>();
+    let mut users_map: HashMap<&NumberEmojis, Vec<UserId>> = HashMap::new();
+
+    for (_, n) in NUMBERS.iter().enumerate() {
+        let reaction_type = Box::pin(ReactionType::Unicode(n.as_str().to_string()));
+
+        let f =
+            ctx.http()
+                .get_reaction_users(message.channel_id, message.id, &reaction_type, 50, None);
+        let users = f.await.unwrap();
+        users_map.insert(
+            n,
+            users
+                .into_iter()
+                .map(|u| u.id)
+                .filter(|id| complete_users.contains(id))
+                .collect(),
+        );
+    }
+
+    let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
+
+    for (_, n) in NUMBERS.iter().enumerate() {
+        day_counts.insert(&n, 0);
+        users_map
+            .get(&n)
+            .unwrap_or(&vec![])
+            .into_iter()
+            .for_each(|_| {
+                day_counts.entry(&n).and_modify(|v| *v += 1);
+            });
+    }
+    println!("{:?}", day_counts);
 
     Ok(())
 }

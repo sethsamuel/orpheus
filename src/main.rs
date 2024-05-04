@@ -1,6 +1,5 @@
 use dotenvy::dotenv;
 
-
 use tokio::sync::Mutex;
 
 use poise::serenity_prelude as serenity;

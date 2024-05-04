@@ -1,3 +1,4 @@
+#[derive(Eq, Hash, PartialEq, Debug)]
 pub enum NumberEmojis {
     One,
     Two,
