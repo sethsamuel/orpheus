@@ -7,7 +7,7 @@ use poise::serenity_prelude as serenity;
 mod types;
 use types::{Error, State};
 
-use crate::poll::poll::Poll;
+use crate::poll::Poll;
 mod commands;
 mod poll;
 

@@ -1,6 +1,6 @@
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
+use chrono::{NaiveDateTime, NaiveTime};
 
-use super::poll::Poll;
+use super::Poll;
 
 const END_DATE_FORMAT: &str = "%a, %b %d at %I%P";
 
@@ -17,7 +17,7 @@ impl Poll {
     }
 
     pub fn host_line(&self) -> String {
-        let host = self.host.clone();
+        let host = self.host;
         format!("Host: <@{host}>")
     }
 
@@ -35,7 +35,7 @@ impl Poll {
 mod tests {
     use chrono::NaiveDate;
 
-    use crate::poll::poll::Poll;
+    use crate::poll::Poll;
 
     #[test]
     fn test_ends_at_line() {

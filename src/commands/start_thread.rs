@@ -1,7 +1,7 @@
 use crate::poll::consts::{FINISHED, NUMBERS};
-use crate::poll::poll::Poll;
+use crate::poll::Poll;
 use crate::types::{Context, Error};
-use chrono::{DateTime, Days, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use chrono::{Days, NaiveDate, Utc};
 
 #[derive(serde::Serialize)]
 struct ThreadOptions {
