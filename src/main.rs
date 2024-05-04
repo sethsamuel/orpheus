@@ -1,6 +1,6 @@
 use dotenvy::dotenv;
-use std::collections::HashMap;
-use std::sync::atomic::AtomicU32;
+
+
 use tokio::sync::Mutex;
 
 use poise::serenity_prelude as serenity;
