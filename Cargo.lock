@@ -842,6 +842,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "poise",
+ "regex",
  "serde",
  "serenity",
  "tokio",

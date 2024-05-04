@@ -12,6 +12,7 @@ tokio = { version = "1.25.1", features = ["rt-multi-thread"] }
 dotenvy = "0.15.7"
 serde = "1.0.199"
 chrono = "0.4.38"
+regex = "1.10.4"
 
 [dependencies.serenity]
 default-features = false
