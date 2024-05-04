@@ -90,8 +90,8 @@ mod tests {
         let poll = Poll {
             event_name: "My event!".to_string(),
             host: 123451234.into(),
-            end_date: NaiveDate::from_ymd_opt(2024, 02, 11).unwrap(),
-            start_date: NaiveDate::from_ymd_opt(2024, 02, 18).unwrap(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
         };
         let str: String = String::from(poll.clone());
         let poll2: Result<Poll, FromStringError> = str.try_into();

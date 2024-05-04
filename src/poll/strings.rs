@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn test_ends_at_line() {
         let mut poll = Poll::default();
-        poll.end_date = NaiveDate::from_ymd_opt(2024, 03, 4).unwrap();
+        poll.end_date = NaiveDate::from_ymd_opt(2024, 3, 4).unwrap();
         let line = poll.ends_at_line();
         assert_eq!(line, "Event voting will be open until Mon, Mar 4 at 10pm")
     }
