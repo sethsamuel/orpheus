@@ -1,4 +1,5 @@
 use std::sync::atomic::Ordering;
+use std::sync::Mutex;
 
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Reaction;
@@ -16,39 +17,34 @@ pub fn on_ready(data_about_bot: &Ready) -> Result<(), Error> {
 }
 
 pub async fn on_message(
-    message: &Message,
+    _message: &Message,
+    _ctx: &serenity::Context,
+    _event: &serenity::FullEvent,
+    _data: &State,
+) -> Result<(), Error> {
+    Ok(())
+}
+
+pub async fn on_reaction_change(
+    reaction: &Reaction,
     ctx: &serenity::Context,
     _: &serenity::FullEvent,
     data: &State,
 ) -> Result<(), Error> {
-    println!("New message: {}", message.content);
-    if message.content.to_lowercase().contains("poise")
-        && message.author.id != ctx.cache.current_user().id
-    {
-        let old_mentions = data.poise_mentions.fetch_add(1, Ordering::SeqCst);
-        message
-            .reply(
-                ctx,
-                format!("Poise has been mentioned {} times", old_mentions + 1),
-            )
-            .await?;
+    let bot_id = ctx.http().get_current_user().await.unwrap().id;
+    if reaction.user_id.unwrap() == bot_id {
+        return Ok(());
     }
 
-    Ok(())
-}
-
-pub async fn on_reaction_add(
-    add_reaction: &Reaction,
-    ctx: &serenity::Context,
-    _: &serenity::FullEvent,
-    _: &State,
-) -> Result<(), Error> {
-    let message = add_reaction.message(ctx.http()).await.unwrap();
+    let _lock = data.lock.lock();
+    let message = reaction.message(ctx.http()).await.unwrap();
     let poll = Poll::try_from(message.content).unwrap();
     println!("{:?}", poll);
     println!(
-        "New reaction {} to {}",
-        add_reaction.emoji, add_reaction.message_id
+        "New reaction by {} {} to {}",
+        reaction.user_id.unwrap(),
+        reaction.emoji,
+        reaction.message_id
     );
 
     Ok(())

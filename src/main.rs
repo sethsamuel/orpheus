@@ -1,5 +1,7 @@
 use dotenvy::dotenv;
+use std::collections::HashMap;
 use std::sync::atomic::AtomicU32;
+use tokio::sync::Mutex;
 
 use poise::serenity_prelude as serenity;
 
@@ -33,7 +35,7 @@ async fn main() {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(State {
-                    poise_mentions: AtomicU32::new(0),
+                    lock: Mutex::new(()),
                 })
             })
         })
@@ -56,9 +58,11 @@ async fn event_handler(
         serenity::FullEvent::Message { new_message } => {
             handlers::on_message(new_message, ctx, event, data).await
         }
-
         serenity::FullEvent::ReactionAdd { add_reaction } => {
-            handlers::on_reaction_add(add_reaction, ctx, event, data).await
+            handlers::on_reaction_change(add_reaction, ctx, event, data).await
+        }
+        serenity::FullEvent::ReactionRemove { removed_reaction } => {
+            handlers::on_reaction_change(removed_reaction, ctx, event, data).await
         }
 
         _ => Ok(()),
