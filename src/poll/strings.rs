@@ -13,7 +13,7 @@ pub fn strip_zero_padding(str: &str) -> String {
 impl Poll {
     pub fn welcome_line(&self) -> String {
         let name = self.event_name.clone();
-        format!("Welcome to the scheduling thread for {name}!")
+        format!("Welcome to the scheduling thread for **{name}**!")
     }
 
     pub fn host_line(&self) -> String {

@@ -8,8 +8,8 @@ mod types;
 use types::{Error, State};
 
 use crate::poll::poll::Poll;
+mod commands;
 mod poll;
-mod start_thread;
 
 #[tokio::main]
 async fn main() {
@@ -21,7 +21,10 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![start_thread::start_thread()],
+            commands: vec![
+                commands::start_thread::start_thread(),
+                commands::update::update(),
+            ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
