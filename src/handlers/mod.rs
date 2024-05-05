@@ -3,10 +3,7 @@ use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
 use ::serenity::all::Reaction;
 
-
 use poise::serenity_prelude as serenity;
-
-
 
 use crate::poll::consts::FINISHED;
 
@@ -54,7 +51,8 @@ pub async fn on_reaction_change(
     let message = reaction.message(ctx.http()).await.unwrap();
     let mut poll = Poll::try_from(message.content.clone()).unwrap();
 
-    poll.update_days(ctx.http(), bot_id, message.channel_id, message.id)
+    let _ = poll
+        .update_days(ctx.http(), bot_id, message.channel_id, message.id)
         .await;
 
     let _ = poll
