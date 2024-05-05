@@ -1,8 +1,7 @@
-
 use crate::poll::Poll;
 use crate::types::{Context, Error};
 use chrono::{Days, NaiveDate, Utc};
-
+use serenity::all::{User, UserId};
 
 #[derive(serde::Serialize)]
 struct ThreadOptions {
@@ -13,6 +12,7 @@ struct ThreadOptions {
 pub async fn start_thread(
     ctx: Context<'_>,
     #[description = "Event name"] name: String,
+    #[description = "Required users"] required_users: Vec<User>,
     #[description = "Start date (mm/dd/yy)"] start_date: Option<String>,
     #[description = "Poll open for days"] days: Option<u64>,
 ) -> Result<(), Error> {
@@ -35,6 +35,7 @@ pub async fn start_thread(
     let poll = Poll {
         host,
         event_name: name,
+        required_users: Some(required_users.iter().map(|u| u.id).collect::<Vec<UserId>>()),
         end_date,
         start_date,
         ..Default::default()

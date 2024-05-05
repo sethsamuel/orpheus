@@ -6,7 +6,7 @@ use ::serenity::{
     futures::future::join_all,
 };
 use base64::Engine;
-use chrono::{Days, NaiveDate, NaiveTime};
+use chrono::{Datelike, Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
 use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
@@ -59,6 +59,9 @@ impl From<Poll> for String {
         message_str += value.host_line().as_str();
         message_str += "\n";
         message_str += "\n";
+        message_str += value.required_users_line().as_str();
+        message_str += "\n";
+        message_str += "\n";
         message_str += value.ends_at_line().as_str();
         message_str += "\n";
         message_str += "\n";
@@ -70,11 +73,18 @@ impl From<Poll> for String {
             let date = value
                 .start_date
                 .checked_add_days(Days::new(i.try_into().unwrap()))
-                .unwrap()
-                .and_time(NaiveTime::from_hms_opt(19, 0, 0).unwrap())
+                .unwrap();
+            let hour = match date.weekday() {
+                chrono::Weekday::Sat => 15,
+                chrono::Weekday::Sun => 15,
+                _ => 19,
+            };
+            let date_time = date
+                .and_time(NaiveTime::from_hms_opt(hour, 0, 0).unwrap())
                 .format(date_format)
                 .to_string();
-            let clean = strip_zero_padding(&date);
+
+            let clean = strip_zero_padding(&date_time);
             let mut eliminated = "";
             if value.eliminated_days.contains(number) {
                 eliminated = "~~";

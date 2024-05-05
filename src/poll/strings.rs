@@ -21,6 +21,14 @@ impl Poll {
         format!("Host: <@{host}>")
     }
 
+    pub fn required_users_line(&self) -> String {
+        let mut line = "Required attendees:".to_string();
+        for u in self.required_users.clone().unwrap_or_default().iter() {
+            line += format!(" <@{}>", u).as_str();
+        }
+        line.to_string()
+    }
+
     pub fn ends_at_line(&self) -> String {
         let end_time =
             NaiveDateTime::new(self.end_date, NaiveTime::from_hms_opt(22, 0, 0).unwrap());
