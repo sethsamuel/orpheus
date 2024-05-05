@@ -1,10 +1,11 @@
 use ::serenity::all::ActivityData;
 use ::serenity::all::CacheHttp;
+use ::serenity::all::Context;
 use ::serenity::all::Reaction;
 use ::serenity::all::ReactionType;
 use ::serenity::all::UserId;
 use poise::serenity_prelude as serenity;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::poll::consts::NumberEmojis;
 use crate::poll::consts::FINISHED;
@@ -32,12 +33,15 @@ pub async fn on_message(
 
 pub async fn on_reaction_change(
     reaction: &Reaction,
-    ctx: &serenity::Context,
+    ctx: &Context,
     _: &serenity::FullEvent,
     data: &State,
 ) -> Result<(), Error> {
     let bot_id = ctx.http().get_current_user().await.unwrap().id;
     if reaction.user_id.unwrap() == bot_id {
+        return Ok(());
+    }
+    if !reaction.emoji.unicode_eq(FINISHED) {
         return Ok(());
     }
     let mut status = data.status.lock().await;
@@ -48,55 +52,14 @@ pub async fn on_reaction_change(
 
     let _lock = data.lock.lock().await;
     let message = reaction.message(ctx.http()).await.unwrap();
-    let poll = Poll::try_from(message.content.clone()).unwrap();
-    println!("{:?}", poll);
-    println!(
-        "New reaction by {} {} to {}",
-        reaction.user_id.unwrap(),
-        reaction.emoji,
-        reaction.message_id
-    );
+    let mut poll = Poll::try_from(message.content.clone()).unwrap();
 
-    let complete_users = message
-        .reaction_users(
-            ctx.http(),
-            ReactionType::Unicode(FINISHED.to_string()),
-            None,
-            None,
-        )
-        .await
-        .unwrap()
-        .into_iter()
-        .map(|u| u.id)
-        .filter(|id| *id != bot_id)
-        .collect::<Vec<UserId>>();
-    let mut users_map: HashMap<&NumberEmojis, Vec<UserId>> = HashMap::new();
+    poll.update_days(ctx.http(), bot_id, message.channel_id, message.id)
+        .await;
 
-    for n in NUMBERS.iter() {
-        let reaction_type = Box::pin(ReactionType::Unicode(n.as_str().to_string()));
-
-        let f =
-            ctx.http()
-                .get_reaction_users(message.channel_id, message.id, &reaction_type, 50, None);
-        let users = f.await.unwrap();
-        users_map.insert(
-            n,
-            users
-                .into_iter()
-                .map(|u| u.id)
-                .filter(|id| complete_users.contains(id))
-                .collect(),
-        );
-    }
-
-    let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
-    for n in NUMBERS.iter() {
-        day_counts.insert(n, 0);
-        users_map.get(&n).unwrap_or(&vec![]).iter().for_each(|_| {
-            day_counts.entry(n).and_modify(|v| *v += 1);
-        });
-    }
-    println!("{:?}", day_counts);
+    let _ = poll
+        .update_message(ctx.http(), message.channel_id, message.id)
+        .await;
 
     ctx.set_activity(Some(ActivityData::custom("Waiting...")));
 

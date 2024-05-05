@@ -1,4 +1,4 @@
-use serenity::all::{GetMessages};
+use serenity::all::GetMessages;
 
 use crate::poll::Poll;
 use crate::types::{Context, Error};
@@ -18,7 +18,7 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
     let poll = Poll::try_from(thread_message.content.clone()).unwrap();
     println!("{:?}", poll);
     let _ = poll
-        .update_message(&ctx, ctx.channel_id(), thread_message.id)
+        .update_message(&ctx.http(), ctx.channel_id(), thread_message.id)
         .await;
 
     let _ = ctx.reply("Updated!").await;

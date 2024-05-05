@@ -49,6 +49,7 @@ pub async fn start_thread(
                 event_name: name,
                 end_date,
                 start_date,
+                ..Default::default()
             };
             let message_str: String = poll.into();
 
