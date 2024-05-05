@@ -1,7 +1,9 @@
 use ::serenity::all::ActivityData;
+use ::serenity::all::AutoArchiveDuration;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
 use ::serenity::all::CreateMessage;
+use ::serenity::all::EditThread;
 use ::serenity::all::Reaction;
 use chrono::Days;
 
@@ -50,8 +52,6 @@ pub async fn on_reaction_change(
     *status = OrpheusStatus::Processing;
     ctx.set_activity(Some(ActivityData::custom("Processing...")));
 
-    // status. = OrpheusStatus::Processing;
-
     let _lock = data.lock.lock().await;
     let message = reaction.message(ctx.http()).await.unwrap();
     let mut poll = Poll::try_from(message.content.clone()).unwrap();
@@ -89,11 +89,25 @@ pub async fn on_reaction_change(
                 message.channel_id,
                 vec![],
                 &CreateMessage::new().content(format!(
-                    "All dates eliminated! Created a new thread <#{}> with next set of dates",
+                    "All dates eliminated! Created a new thread <#{}> with next set of dates. This thread is locked and will be archived in one day.",
                     channel_id
                 )),
             )
             .await;
+
+        let _ = ctx
+            .http()
+            .edit_thread(
+                message.channel_id,
+                &EditThread::new()
+                    .locked(true)
+                    .archived(true)
+                    .auto_archive_duration(AutoArchiveDuration::OneDay),
+                Some("Voting closed"),
+            )
+            .await
+            .inspect_err(|e| println!("Error closing thread {}", e))
+            .inspect(|_| println!("Channel archived"));
     }
 
     let _ = poll
