@@ -1,4 +1,4 @@
-use serenity::all::{EditMessage, GetMessages};
+use serenity::all::{GetMessages};
 
 use crate::poll::Poll;
 use crate::types::{Context, Error};

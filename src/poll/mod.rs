@@ -89,27 +89,6 @@ impl From<Poll> for String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use chrono::NaiveDate;
-
-    use super::FromStringError;
-
-    #[test]
-    fn test_froms() {
-        use super::Poll;
-        let poll = Poll {
-            event_name: "My event!".to_string(),
-            host: 123451234.into(),
-            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
-            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
-        };
-        let str: String = String::from(poll.clone());
-        let poll2: Result<Poll, FromStringError> = str.try_into();
-        assert_eq!(poll, poll2.unwrap());
-    }
-}
-
 pub struct UpdateError;
 impl Poll {
     pub async fn update_message(
@@ -130,5 +109,26 @@ impl Poll {
             .await;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::NaiveDate;
+
+    use super::FromStringError;
+
+    #[test]
+    fn test_froms() {
+        use super::Poll;
+        let poll = Poll {
+            event_name: "My event!".to_string(),
+            host: 123451234.into(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+        };
+        let str: String = String::from(poll.clone());
+        let poll2: Result<Poll, FromStringError> = str.try_into();
+        assert_eq!(poll, poll2.unwrap());
     }
 }
