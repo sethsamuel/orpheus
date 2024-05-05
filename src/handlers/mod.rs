@@ -4,7 +4,7 @@ use ::serenity::all::Context;
 use ::serenity::all::CreateMessage;
 use ::serenity::all::Reaction;
 use chrono::Days;
-use chrono::NaiveDate;
+
 use chrono::Utc;
 
 use poise::serenity_prelude as serenity;

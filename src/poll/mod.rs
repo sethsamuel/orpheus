@@ -2,7 +2,7 @@ pub mod consts;
 pub mod strings;
 
 use ::serenity::{
-    all::{ChannelType, GuildChannel, Http, ReactionType},
+    all::{ChannelType, Http, ReactionType},
     futures::future::join_all,
 };
 use base64::Engine;
@@ -220,7 +220,6 @@ impl Poll {
         Ok(())
     }
 }
-struct StartThreadError;
 impl Poll {
     pub async fn start_thread(
         &self,

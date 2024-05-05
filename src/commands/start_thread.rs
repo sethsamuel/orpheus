@@ -1,8 +1,8 @@
-use crate::poll::consts::{FINISHED, NUMBERS};
+
 use crate::poll::Poll;
 use crate::types::{Context, Error};
 use chrono::{Days, NaiveDate, Utc};
-use serenity::all::ChannelType;
+
 
 #[derive(serde::Serialize)]
 struct ThreadOptions {
