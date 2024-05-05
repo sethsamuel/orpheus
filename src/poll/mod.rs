@@ -275,28 +275,6 @@ impl Poll {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use chrono::NaiveDate;
-
-    use super::FromStringError;
-
-    #[test]
-    fn test_froms() {
-        use super::Poll;
-        let poll = Poll {
-            event_name: "My event!".to_string(),
-            host: 123451234.into(),
-            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
-            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
-            ..Default::default()
-        };
-        let str: String = String::from(poll.clone());
-        let poll2: Result<Poll, FromStringError> = str.try_into();
-        assert_eq!(poll, poll2.unwrap());
-    }
-}
-
 impl Poll {
     pub async fn next_dates(&self, http: &Http, message: &Message) {
         // No days left, start a new thread
@@ -345,5 +323,27 @@ impl Poll {
             .await
             .inspect_err(|e| println!("Error closing thread {}", e))
             .inspect(|_| println!("Channel archived"));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::NaiveDate;
+
+    use super::FromStringError;
+
+    #[test]
+    fn test_froms() {
+        use super::Poll;
+        let poll = Poll {
+            event_name: "My event!".to_string(),
+            host: 123451234.into(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+            ..Default::default()
+        };
+        let str: String = String::from(poll.clone());
+        let poll2: Result<Poll, FromStringError> = str.try_into();
+        assert_eq!(poll, poll2.unwrap());
     }
 }
