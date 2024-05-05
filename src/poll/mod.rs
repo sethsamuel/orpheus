@@ -6,7 +6,10 @@ use chrono::{Days, NaiveDate, NaiveTime};
 
 use consts::{FINISHED, NUMBERS};
 use serde::{Deserialize, Serialize};
+use serenity::all::{ChannelId, EditMessage, MessageId};
 use strings::strip_zero_padding;
+
+use crate::types::Context;
 
 #[derive(Default, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Poll {
@@ -69,6 +72,10 @@ impl From<Poll> for String {
         message_str += format!("\nTo lock in your availability, hit {FINISHED}").as_str();
         message_str += "\n";
         message_str += "\n";
+        // message_str += format!("Orpehus is {}");
+        // message_str += "\n";
+        // message_str += "\n";
+
         message_str += "Orpehus Magic String (feel free to ignore):";
         message_str += "\n";
         message_str = message_str
@@ -100,5 +107,28 @@ mod tests {
         let str: String = String::from(poll.clone());
         let poll2: Result<Poll, FromStringError> = str.try_into();
         assert_eq!(poll, poll2.unwrap());
+    }
+}
+
+pub struct UpdateError;
+impl Poll {
+    pub async fn update_message(
+        &self,
+        ctx: &Context<'_>,
+        channel_id: ChannelId,
+        message_id: MessageId,
+    ) -> Result<(), UpdateError> {
+        let new_content: String = self.clone().into();
+        let _ = ctx
+            .http()
+            .edit_message(
+                channel_id,
+                message_id,
+                &EditMessage::new().content(new_content),
+                vec![],
+            )
+            .await;
+
+        Ok(())
     }
 }

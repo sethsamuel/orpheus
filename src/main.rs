@@ -35,6 +35,7 @@ async fn main() {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(State {
                     lock: Mutex::new(()),
+                    status: Mutex::new(types::OrpheusStatus::Waiting),
                 })
             })
         })

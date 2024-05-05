@@ -14,12 +14,11 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
         .messages(ctx.http(), GetMessages::new())
         .await
         .unwrap();
-    let mut thread_message = thread.last().unwrap().clone();
+    let thread_message = thread.last().unwrap().clone();
     let poll = Poll::try_from(thread_message.content.clone()).unwrap();
     println!("{:?}", poll);
-    let new_content: String = poll.into();
-    let _ = thread_message
-        .edit(ctx.http(), EditMessage::new().content(new_content))
+    let _ = poll
+        .update_message(&ctx, ctx.channel_id(), thread_message.id)
         .await;
 
     let _ = ctx.reply("Updated!").await;

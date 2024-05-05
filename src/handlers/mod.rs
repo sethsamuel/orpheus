@@ -1,3 +1,4 @@
+use ::serenity::all::ActivityData;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Reaction;
 use ::serenity::all::ReactionType;
@@ -9,6 +10,7 @@ use crate::poll::consts::NumberEmojis;
 use crate::poll::consts::FINISHED;
 use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
+use crate::types::OrpheusStatus;
 
 use super::types::{Error, State};
 use serenity::all::Message;
@@ -38,8 +40,13 @@ pub async fn on_reaction_change(
     if reaction.user_id.unwrap() == bot_id {
         return Ok(());
     }
+    let mut status = data.status.lock().await;
+    *status = OrpheusStatus::Processing;
+    ctx.set_activity(Some(ActivityData::custom("Processing...")));
 
-    let _lock = data.lock.lock();
+    // status. = OrpheusStatus::Processing;
+
+    let _lock = data.lock.lock().await;
     let message = reaction.message(ctx.http()).await.unwrap();
     let poll = Poll::try_from(message.content.clone()).unwrap();
     println!("{:?}", poll);
@@ -83,7 +90,6 @@ pub async fn on_reaction_change(
     }
 
     let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
-
     for n in NUMBERS.iter() {
         day_counts.insert(n, 0);
         users_map.get(&n).unwrap_or(&vec![]).iter().for_each(|_| {
@@ -91,6 +97,8 @@ pub async fn on_reaction_change(
         });
     }
     println!("{:?}", day_counts);
+
+    ctx.set_activity(Some(ActivityData::custom("Waiting...")));
 
     Ok(())
 }
