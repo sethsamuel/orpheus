@@ -2,6 +2,7 @@ use crate::poll::consts::{FINISHED, NUMBERS};
 use crate::poll::Poll;
 use crate::types::{Context, Error};
 use chrono::{Days, NaiveDate, Utc};
+use serenity::all::ChannelType;
 
 #[derive(serde::Serialize)]
 struct ThreadOptions {
@@ -15,72 +16,39 @@ pub async fn start_thread(
     #[description = "Start date (mm/dd/yy)"] start_date: Option<String>,
     #[description = "Poll open for days"] days: Option<u64>,
 ) -> Result<(), Error> {
-    println!("Starting thread");
     let _ = ctx.defer().await;
-    let res = ctx
-        .http()
-        .create_thread(
-            ctx.channel_id(),
-            &ThreadOptions {
-                name: name.to_string(),
-            },
-            Some("Time to schedule"),
-        )
+
+    let parsed = match &start_date {
+        Some(str) => NaiveDate::parse_from_str(str.as_str(), "%D").ok(),
+        _ => None,
+    };
+    let start_date = match parsed {
+        Some(_) => parsed.unwrap(),
+        _ => Utc::now().naive_local().date(),
+    };
+    let end_date = start_date
+        .checked_add_days(Days::new(days.unwrap_or(1)))
+        .unwrap();
+    // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
+
+    let host: serenity::model::prelude::UserId = ctx.author().id;
+    let poll = Poll {
+        host,
+        event_name: name,
+        end_date,
+        start_date,
+        ..Default::default()
+    };
+
+    let (channel_id, _) = poll
+        .start_thread(ctx.http(), ctx.channel_id())
+        .await
+        .unwrap();
+
+    let _ = ctx
+        .say(format!("Created a new thread <#{}>", channel_id))
         .await;
-    match res {
-        Ok(c) => {
-            println!("Created {c}");
-            let parsed = match &start_date {
-                Some(str) => NaiveDate::parse_from_str(str.as_str(), "%D").ok(),
-                _ => None,
-            };
-            let start_date = match parsed {
-                Some(_) => parsed.unwrap(),
-                _ => Utc::now().naive_local().date(),
-            };
-            let end_date = start_date
-                .checked_add_days(Days::new(days.unwrap_or(1)))
-                .unwrap();
-            // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
-
-            let host: serenity::model::prelude::UserId = ctx.author().id;
-            let poll = Poll {
-                host,
-                event_name: name,
-                end_date,
-                start_date,
-                ..Default::default()
-            };
-            let message_str: String = poll.into();
-
-            let message = c.id.say(ctx.http(), message_str).await;
-            let message_id = message.unwrap().id;
-            for n in NUMBERS {
-                let _ = ctx
-                    .http()
-                    .create_reaction(
-                        c.id,
-                        message_id,
-                        &serenity::all::ReactionType::Unicode(n.as_str().to_string()),
-                    )
-                    .await;
-            }
-            let _ = ctx
-                .http()
-                .create_reaction(
-                    c.id,
-                    message_id,
-                    &serenity::all::ReactionType::Unicode(FINISHED.to_string()),
-                )
-                .await;
-
-            let _ = ctx.say(format!("Created a new thread <#{}>", c.id)).await;
-        }
-        Err(err) => {
-            println!("Error {err}");
-            let _ = ctx.say("Something went wrong :(").await;
-        }
-    }
+    println!("Starting thread");
     println!("Command handled");
     Ok(())
 }

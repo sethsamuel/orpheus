@@ -1,12 +1,17 @@
 use ::serenity::all::ActivityData;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
+use ::serenity::all::CreateMessage;
 use ::serenity::all::Reaction;
+use chrono::Days;
+use chrono::NaiveDate;
+use chrono::Utc;
 
 use poise::serenity_prelude as serenity;
 
 use crate::poll::consts::FINISHED;
 
+use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
 use crate::types::OrpheusStatus;
 
@@ -54,6 +59,42 @@ pub async fn on_reaction_change(
     let _ = poll
         .update_days(ctx.http(), bot_id, message.channel_id, message.id)
         .await;
+    if poll.eliminated_days.len() == NUMBERS.len() {
+        // No days left, start a new thread
+        let mut new_poll = poll.clone();
+        new_poll.start_date = new_poll.start_date.checked_add_days(Days::new(7)).unwrap();
+        new_poll.eliminated_days = vec![];
+        new_poll.end_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(1))
+            .unwrap();
+        let (channel_id, _) = new_poll
+            .start_thread(
+                ctx.http(),
+                message
+                    .channel(ctx.http())
+                    .await
+                    .unwrap()
+                    .guild()
+                    .unwrap()
+                    .parent_id
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let _ = ctx
+            .http()
+            .send_message(
+                message.channel_id,
+                vec![],
+                &CreateMessage::new().content(format!(
+                    "All dates eliminated! Created a new thread <#{}> with next set of dates",
+                    channel_id
+                )),
+            )
+            .await;
+    }
 
     let _ = poll
         .update_message(ctx.http(), message.channel_id, message.id)

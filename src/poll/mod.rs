@@ -2,22 +2,17 @@ pub mod consts;
 pub mod strings;
 
 use ::serenity::{
-    all::{Http, ReactionType},
+    all::{ChannelType, GuildChannel, Http, ReactionType},
     futures::future::join_all,
 };
 use base64::Engine;
 use chrono::{Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
-use poise::{serenity_prelude as serenity};
+use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, EditMessage, MessageId, UserId};
-use std::{
-    collections::{HashMap, HashSet},
-};
+use std::collections::{HashMap, HashSet};
 use strings::strip_zero_padding;
-
-
-
 
 use self::consts::NumberEmojis;
 
@@ -167,9 +162,7 @@ impl Poll {
         let mut required_users: HashSet<&UserId> = HashSet::new();
         required_users.insert(&self.host);
         let poll_required_users = self.required_users.clone().unwrap_or_default();
-        poll_required_users
-            .iter()
-            .all(|u| required_users.insert(u));
+        poll_required_users.iter().all(|u| required_users.insert(u));
 
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
@@ -225,6 +218,49 @@ impl Poll {
             .await;
 
         Ok(())
+    }
+}
+struct StartThreadError;
+impl Poll {
+    pub async fn start_thread(
+        &self,
+        http: &Http,
+        channel_id: ChannelId,
+    ) -> Result<(ChannelId, MessageId), ::serenity::Error> {
+        let c = http
+            .create_thread(
+                channel_id,
+                &serenity::builder::CreateThread::new(self.event_name.to_string())
+                    .kind(ChannelType::PublicThread),
+                Some("Time to schedule"),
+            )
+            .await
+            .unwrap();
+
+        let message_str: String = self.clone().into();
+
+        let message = c.id.say(http, message_str).await;
+        let message_id = message.unwrap().id;
+
+        for n in NUMBERS {
+            let _ = http
+                .create_reaction(
+                    c.id,
+                    message_id,
+                    &serenity::all::ReactionType::Unicode(n.as_str().to_string()),
+                )
+                .await
+                .inspect_err(|e| println!("Failed to add emoji! {:?}", e));
+        }
+        let _ = http
+            .create_reaction(
+                c.id,
+                message_id,
+                &serenity::all::ReactionType::Unicode(FINISHED.to_string()),
+            )
+            .await
+            .inspect_err(|e| println!("Failed to add emoji! {:?}", e));
+        Ok((c.id, message_id))
     }
 }
 
