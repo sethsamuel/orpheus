@@ -2,14 +2,14 @@ use ::serenity::all::ActivityData;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
 use ::serenity::all::Reaction;
-use ::serenity::all::ReactionType;
-use ::serenity::all::UserId;
-use poise::serenity_prelude as serenity;
-use std::collections::{HashMap, HashSet};
 
-use crate::poll::consts::NumberEmojis;
+
+use poise::serenity_prelude as serenity;
+
+
+
 use crate::poll::consts::FINISHED;
-use crate::poll::consts::NUMBERS;
+
 use crate::poll::Poll;
 use crate::types::OrpheusStatus;
 

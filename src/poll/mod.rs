@@ -8,17 +8,16 @@ use ::serenity::{
 use base64::Engine;
 use chrono::{Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
-use poise::{serenity_prelude as serenity, BoxFuture};
+use poise::{serenity_prelude as serenity};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, EditMessage, MessageId, UserId};
 use std::{
     collections::{HashMap, HashSet},
-    sync::Arc,
 };
 use strings::strip_zero_padding;
-use tokio::join;
 
-use crate::types::Context;
+
+
 
 use self::consts::NumberEmojis;
 
@@ -135,7 +134,7 @@ impl Poll {
             .filter(|id| *id != bot_id)
             .collect::<Vec<UserId>>();
 
-        if complete_users.len() == 0 {
+        if complete_users.is_empty() {
             self.eliminated_days.clear();
             return Ok(());
         }
@@ -170,22 +169,22 @@ impl Poll {
         let poll_required_users = self.required_users.clone().unwrap_or_default();
         poll_required_users
             .iter()
-            .all(|u| required_users.insert(&u));
+            .all(|u| required_users.insert(u));
 
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
-            users_map.get(&n).unwrap_or(&vec![]).iter().for_each(|_| {
+            users_map.get(n).unwrap_or(&vec![]).iter().for_each(|_| {
                 day_counts.entry(n).and_modify(|v| *v += 1);
             });
             if users_map
-                .get(&n)
+                .get(n)
                 .unwrap_or(&vec![])
                 .iter()
                 .filter(|u| required_users.contains(u))
                 .count()
                 != required_users.len()
             {
-                eliminated_days.insert(&n);
+                eliminated_days.insert(n);
             }
         }
         println!("{:?}", day_counts);
