@@ -24,6 +24,7 @@ async fn main() {
             commands: vec![
                 commands::start_thread::start_thread(),
                 commands::update::update(),
+                commands::next_dates::next_dates(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

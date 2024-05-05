@@ -2,11 +2,13 @@ pub mod consts;
 pub mod strings;
 
 use ::serenity::{
-    all::{ChannelType, Http, ReactionType},
+    all::{
+        AutoArchiveDuration, ChannelType, CreateMessage, EditThread, Http, Message, ReactionType,
+    },
     futures::future::join_all,
 };
 use base64::Engine;
-use chrono::{Datelike, Days, NaiveDate, NaiveTime};
+use chrono::{Datelike, Days, NaiveDate, NaiveTime, Utc};
 use consts::{FINISHED, NUMBERS};
 use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
@@ -292,5 +294,56 @@ mod tests {
         let str: String = String::from(poll.clone());
         let poll2: Result<Poll, FromStringError> = str.try_into();
         assert_eq!(poll, poll2.unwrap());
+    }
+}
+
+impl Poll {
+    pub async fn next_dates(&self, http: &Http, message: &Message) {
+        // No days left, start a new thread
+        let mut new_poll = self.clone();
+        new_poll.start_date = new_poll.start_date.checked_add_days(Days::new(7)).unwrap();
+        new_poll.eliminated_days = vec![];
+        new_poll.end_date = Utc::now()
+            .date_naive()
+            .checked_add_days(Days::new(1))
+            .unwrap();
+        let (channel_id, _) = new_poll
+            .start_thread(
+                http,
+                message
+                    .channel(http)
+                    .await
+                    .unwrap()
+                    .guild()
+                    .unwrap()
+                    .parent_id
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let _ = http
+                    .send_message(
+                        message.channel_id,
+                        vec![],
+                        &CreateMessage::new().content(format!(
+                            "All dates eliminated! Created a new thread <#{}> with next set of dates. This thread is locked and will be archived in one day.",
+                            channel_id
+                        )),
+                    )
+                    .await;
+
+        let _ = http
+            .edit_thread(
+                message.channel_id,
+                &EditThread::new()
+                    .locked(true)
+                    .archived(true)
+                    .auto_archive_duration(AutoArchiveDuration::OneDay),
+                Some("Voting closed"),
+            )
+            .await
+            .inspect_err(|e| println!("Error closing thread {}", e))
+            .inspect(|_| println!("Channel archived"));
     }
 }

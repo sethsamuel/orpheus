@@ -60,54 +60,7 @@ pub async fn on_reaction_change(
         .update_days(ctx.http(), bot_id, message.channel_id, message.id)
         .await;
     if poll.eliminated_days.len() == NUMBERS.len() {
-        // No days left, start a new thread
-        let mut new_poll = poll.clone();
-        new_poll.start_date = new_poll.start_date.checked_add_days(Days::new(7)).unwrap();
-        new_poll.eliminated_days = vec![];
-        new_poll.end_date = Utc::now()
-            .date_naive()
-            .checked_add_days(Days::new(1))
-            .unwrap();
-        let (channel_id, _) = new_poll
-            .start_thread(
-                ctx.http(),
-                message
-                    .channel(ctx.http())
-                    .await
-                    .unwrap()
-                    .guild()
-                    .unwrap()
-                    .parent_id
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        let _ = ctx
-            .http()
-            .send_message(
-                message.channel_id,
-                vec![],
-                &CreateMessage::new().content(format!(
-                    "All dates eliminated! Created a new thread <#{}> with next set of dates. This thread is locked and will be archived in one day.",
-                    channel_id
-                )),
-            )
-            .await;
-
-        let _ = ctx
-            .http()
-            .edit_thread(
-                message.channel_id,
-                &EditThread::new()
-                    .locked(true)
-                    .archived(true)
-                    .auto_archive_duration(AutoArchiveDuration::OneDay),
-                Some("Voting closed"),
-            )
-            .await
-            .inspect_err(|e| println!("Error closing thread {}", e))
-            .inspect(|_| println!("Channel archived"));
+        poll.next_dates(ctx.http(), &message).await;
     }
 
     let _ = poll
