@@ -19,12 +19,12 @@ pub async fn save_me(
     ctx: Context<'_>,
     #[description = "Event name"] name: String,
     #[description = "Required users"] required_users: Vec<User>,
-    #[description = "Start date (mm/dd/yy)"] start_date: Option<String>,
-    #[description = "Poll open for days"] days: Option<u64>,
+    #[description = "First day to poll (mm/dd/yy)"] first_poll_date: Option<String>,
+    #[description = "Poll open for days"] open_for_days: Option<u64>,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await;
 
-    let parsed = match &start_date {
+    let parsed = match &first_poll_date {
         Some(str) => NaiveDate::parse_from_str(str.as_str(), "%D").ok(),
         _ => None,
     };
@@ -33,7 +33,7 @@ pub async fn save_me(
         _ => Utc::now().naive_local().date(),
     };
     let end_date = start_date
-        .checked_add_days(Days::new(days.unwrap_or(1)))
+        .checked_add_days(Days::new(open_for_days.unwrap_or(1)))
         .unwrap();
     // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
 
