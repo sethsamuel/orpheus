@@ -44,12 +44,29 @@ pub async fn on_reaction_change(
     if !reaction.emoji.unicode_eq(FINISHED) {
         return Ok(());
     }
+
     let mut status = data.status.lock().await;
     *status = OrpheusStatus::Processing;
     ctx.set_activity(Some(ActivityData::custom("Processing...")));
 
     let _lock = data.lock.lock().await;
     let message = reaction.message(ctx.http()).await.unwrap();
+
+    if message
+        .channel(ctx.http())
+        .await
+        .unwrap()
+        .guild()
+        .unwrap()
+        .thread_metadata
+        .unwrap()
+        .locked
+    {
+        ctx.set_activity(Some(ActivityData::custom("Waiting...")));
+
+        return Ok(());
+    }
+
     let mut poll = Poll::try_from(message.content.clone()).unwrap();
 
     let _ = poll

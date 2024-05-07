@@ -2,17 +2,21 @@ use serenity::all::GetMessages;
 
 use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
-use crate::types::{Context, Error};
+use crate::types::{Context, Error, OrpheusStatus};
 
 #[poise::command(prefix_command)]
 pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
-    // println!(ctx);
+    let mut status = ctx.data().status.lock().await;
+    *status = OrpheusStatus::Processing;
     let bot_id = ctx.http().get_current_user().await.unwrap().id;
 
-    let thread = ctx
-        .guild_channel()
-        .await
-        .unwrap()
+    let channel = ctx.guild_channel().await.unwrap();
+
+    if channel.thread_metadata.unwrap().locked {
+        return Ok(());
+    }
+
+    let thread = channel
         .messages(ctx.http(), GetMessages::new())
         .await
         .unwrap();
@@ -33,5 +37,6 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
         .await;
 
     let _ = ctx.reply("Updated!").await;
+
     Ok(())
 }
