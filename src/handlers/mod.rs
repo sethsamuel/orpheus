@@ -3,11 +3,7 @@ use ::serenity::all::ActivityData;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
 
-
 use ::serenity::all::Reaction;
-
-
-
 
 use poise::serenity_prelude as serenity;
 
@@ -60,6 +56,7 @@ pub async fn on_reaction_change(
         .update_days(ctx.http(), bot_id, message.channel_id, message.id)
         .await;
     if poll.eliminated_days.len() == NUMBERS.len() {
+        println!("All days eliminated!");
         poll.next_dates(ctx.http(), &message).await;
     }
 

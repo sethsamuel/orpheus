@@ -22,9 +22,10 @@ async fn main() {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
-                commands::start_thread::start_thread(),
+                commands::orpheus::orpheus(),
                 commands::update::update(),
                 commands::next_dates::next_dates(),
+                commands::nag::nag(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

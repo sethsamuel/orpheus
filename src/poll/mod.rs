@@ -126,20 +126,9 @@ impl Poll {
         channel_id: ChannelId,
         message_id: MessageId,
     ) -> Result<(), UpdateDaysError> {
-        let complete_users = http
-            .get_reaction_users(
-                channel_id,
-                message_id,
-                &ReactionType::Unicode(FINISHED.to_string()),
-                100,
-                None,
-            )
-            .await
-            .unwrap()
-            .into_iter()
-            .map(|u| u.id)
-            .filter(|id| *id != bot_id)
-            .collect::<Vec<UserId>>();
+        let complete_users = self
+            .get_finished_users(http, channel_id, message_id, bot_id)
+            .await;
 
         if complete_users.is_empty() {
             self.eliminated_days.clear();
@@ -171,23 +160,31 @@ impl Poll {
 
         let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
         let mut eliminated_days: HashSet<&NumberEmojis> = HashSet::new();
-        let mut required_users: HashSet<&UserId> = HashSet::new();
-        required_users.insert(&self.host);
+        let mut required_users: HashSet<UserId> = HashSet::new();
+        required_users.insert(self.host);
         let poll_required_users = self.required_users.clone().unwrap_or_default();
-        poll_required_users.iter().all(|u| required_users.insert(u));
+        poll_required_users
+            .iter()
+            .all(|u| required_users.insert(*u));
+
+        let complete_required_users = required_users
+            .intersection(&complete_users)
+            .collect::<HashSet<&UserId>>();
 
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
             users_map.get(n).unwrap_or(&vec![]).iter().for_each(|_| {
                 day_counts.entry(n).and_modify(|v| *v += 1);
             });
+            println!("{:?}", n);
+            println!("{:?}", users_map);
             if users_map
                 .get(n)
                 .unwrap_or(&vec![])
                 .iter()
                 .filter(|u| required_users.contains(u))
                 .count()
-                != required_users.len()
+                != complete_required_users.len()
             {
                 eliminated_days.insert(n);
             }
@@ -196,6 +193,28 @@ impl Poll {
         self.eliminated_days = eliminated_days.iter().map(|n| **n).collect();
 
         Ok(())
+    }
+
+    pub async fn get_finished_users(
+        &self,
+        http: &Http,
+        channel_id: ChannelId,
+        message_id: MessageId,
+        bot_id: UserId,
+    ) -> HashSet<UserId> {
+        http.get_reaction_users(
+            channel_id,
+            message_id,
+            &ReactionType::Unicode(FINISHED.to_string()),
+            100,
+            None,
+        )
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|u| u.id)
+        .filter(|id| *id != bot_id)
+        .collect::<HashSet<UserId>>()
     }
 }
 

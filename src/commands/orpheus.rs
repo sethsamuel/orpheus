@@ -8,8 +8,14 @@ struct ThreadOptions {
     name: String,
 }
 
+#[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
+pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
+    // This will never be called, because `subcommand_required` parameter is set
+    Ok(())
+}
+
 #[poise::command(slash_command)]
-pub async fn start_thread(
+pub async fn save_me(
     ctx: Context<'_>,
     #[description = "Event name"] name: String,
     #[description = "Required users"] required_users: Vec<User>,
