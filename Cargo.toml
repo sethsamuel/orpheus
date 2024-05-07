@@ -16,6 +16,9 @@ chrono = "0.4.38"
 regex = "1.10.4"
 base64 = "0.22.1"
 
+datadog-tracing = "0.2.1"
+tracing = "0.1.40"
+
 [dependencies.serenity]
 default-features = false
 features = [

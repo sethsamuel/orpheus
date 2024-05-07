@@ -31,6 +31,7 @@ pub async fn on_message(
     Ok(())
 }
 
+#[tracing::instrument]
 pub async fn on_reaction_change(
     reaction: &Reaction,
     ctx: &Context,

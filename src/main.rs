@@ -12,8 +12,9 @@ mod handlers;
 mod poll;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let _ = dotenv();
+    let (_guard, tracer_shutdown) = datadog_tracing::init()?;
 
     let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
     let intents =
@@ -47,6 +48,10 @@ async fn main() {
         .framework(framework)
         .await;
     client.unwrap().start().await.unwrap();
+
+    tracer_shutdown.shutdown();
+
+    Ok(())
 }
 
 async fn event_handler(

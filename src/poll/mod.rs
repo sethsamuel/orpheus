@@ -119,6 +119,7 @@ impl From<Poll> for String {
 pub struct UpdateDaysError;
 
 impl Poll {
+    #[tracing::instrument]
     pub async fn update_days(
         &mut self,
         http: &Http,
@@ -218,6 +219,7 @@ impl Poll {
     }
 }
 
+#[tracing::instrument]
 async fn get_reaction_users(
     http: &Http,
     channel_id: ChannelId,
@@ -232,6 +234,7 @@ async fn get_reaction_users(
 
 pub struct UpdateError;
 impl Poll {
+    #[tracing::instrument]
     pub async fn update_message(
         &self,
         http: &Http,
@@ -295,6 +298,7 @@ impl Poll {
 }
 
 impl Poll {
+    #[tracing::instrument]
     pub async fn next_dates(&self, http: &Http, message: &Message) {
         // No days left, start a new thread
         let mut new_poll = self.clone();

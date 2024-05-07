@@ -4,6 +4,7 @@ use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
+#[tracing::instrument]
 #[poise::command(prefix_command)]
 pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
     let mut status = ctx.data().status.lock().await;
