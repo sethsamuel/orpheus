@@ -3,11 +3,6 @@ use crate::types::{Context, Error};
 use chrono::{Days, NaiveDate, Utc};
 use serenity::all::{User, UserId};
 
-#[derive(serde::Serialize)]
-struct ThreadOptions {
-    name: String,
-}
-
 #[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
 pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
     // This will never be called, because `subcommand_required` parameter is set

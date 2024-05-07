@@ -33,7 +33,7 @@ pub async fn nag(ctx: Context<'_>) -> Result<(), Error> {
         .map(|u| format!("<@{}>", u))
         .collect::<Vec<_>>();
 
-    if nag_users.len() > 0 {
+    if !nag_users.is_empty() {
         let nag_str: String = nag_users.join(" ");
         let message = format!("Sorry to bother you {}, but could you please take the time to fill out the current poll?\n\nThanks in advance, your friendly nagging bot.", nag_str);
 
