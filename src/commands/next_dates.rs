@@ -1,11 +1,16 @@
-use serenity::all::GetMessages;
+use serenity::all::{ActivityData, GetMessages};
 
 use crate::poll::Poll;
-use crate::types::{Context, Error};
+use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
 #[poise::command(prefix_command)]
 pub async fn next_dates(ctx: Context<'_>) -> Result<(), Error> {
+    let mut status = ctx.data().status.lock().await;
+    *status = OrpheusStatus::Processing;
+    ctx.serenity_context()
+        .set_activity(Some(ActivityData::custom("Processing...")));
+
     let thread = ctx
         .guild_channel()
         .await
@@ -27,6 +32,9 @@ pub async fn next_dates(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     poll.next_dates(ctx.http(), &thread_message).await;
+
+    ctx.serenity_context()
+        .set_activity(Some(ActivityData::custom("Waiting...")));
 
     Ok(())
 }

@@ -3,10 +3,11 @@ use tokio::sync::Mutex;
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, State, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum OrpheusStatus {
     Waiting,
     Processing,
+    Stopped,
 }
 
 #[derive(Debug)]

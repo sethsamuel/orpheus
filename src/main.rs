@@ -24,6 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::orpheus::orpheus(),
+                commands::start::start(),
+                commands::stop::stop(),
                 commands::update::update(),
                 commands::next_dates::next_dates(),
                 commands::nag::nag(),

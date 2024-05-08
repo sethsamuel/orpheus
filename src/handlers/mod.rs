@@ -47,6 +47,10 @@ pub async fn on_reaction_change(
     }
 
     let mut status = data.status.lock().await;
+    if *status == OrpheusStatus::Stopped {
+        return Ok(());
+    }
+
     *status = OrpheusStatus::Processing;
     ctx.set_activity(Some(ActivityData::custom("Processing...")));
 
@@ -82,6 +86,7 @@ pub async fn on_reaction_change(
         .update_message(ctx.http(), message.channel_id, message.id)
         .await;
 
+    *status = OrpheusStatus::Waiting;
     ctx.set_activity(Some(ActivityData::custom("Waiting...")));
 
     Ok(())

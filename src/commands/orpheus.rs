@@ -1,7 +1,7 @@
 use crate::poll::Poll;
-use crate::types::{Context, Error};
+use crate::types::{Context, Error, OrpheusStatus};
 use chrono::{Days, NaiveDate, Utc};
-use serenity::all::{User, UserId};
+use serenity::all::{ActivityData, User, UserId};
 
 #[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
 pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
@@ -18,6 +18,14 @@ pub async fn save_me(
     #[description = "Poll open for days"] open_for_days: Option<u64>,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await;
+
+    let mut status = ctx.data().status.lock().await;
+    if *status == OrpheusStatus::Stopped {
+        return Ok(());
+    }
+    *status = OrpheusStatus::Processing;
+    ctx.serenity_context()
+        .set_activity(Some(ActivityData::custom("Processing...")));
 
     let parsed = match &first_poll_date {
         Some(str) => NaiveDate::parse_from_str(str.as_str(), "%D").ok(),
@@ -51,6 +59,12 @@ pub async fn save_me(
         .say(format!("Created a new thread <#{}>", channel_id))
         .await;
     println!("Starting thread");
+
+    *status = OrpheusStatus::Waiting;
+    ctx.serenity_context()
+        .set_activity(Some(ActivityData::custom("Waiting...")));
+
     println!("Command handled");
+
     Ok(())
 }
