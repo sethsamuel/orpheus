@@ -1,6 +1,6 @@
-use serenity::all::{ActivityData, GetMessages};
+use serenity::all::{ActivityData};
 
-use crate::poll::Poll;
+
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
