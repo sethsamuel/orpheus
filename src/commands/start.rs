@@ -1,5 +1,4 @@
-use serenity::all::{ActivityData};
-
+use serenity::all::ActivityData;
 
 use crate::types::{Context, Error, OrpheusStatus};
 
