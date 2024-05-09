@@ -1,6 +1,6 @@
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
-use chrono::{Days, NaiveDate, Utc};
+use chrono::{NaiveDate, Utc};
 use serenity::all::{ActivityData, User, UserId};
 
 #[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
@@ -15,7 +15,6 @@ pub async fn save_me(
     #[description = "Event name"] name: String,
     #[description = "Required users"] required_users: Vec<User>,
     #[description = "First day to poll (mm/dd/yy)"] first_poll_date: Option<String>,
-    #[description = "Poll open for days"] open_for_days: Option<u64>,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await;
 
@@ -35,9 +34,7 @@ pub async fn save_me(
         Some(_) => parsed.unwrap(),
         _ => Utc::now().naive_local().date(),
     };
-    let end_date = start_date
-        .checked_add_days(Days::new(open_for_days.unwrap_or(1)))
-        .unwrap();
+    let end_date = start_date;
     // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
 
     let host: serenity::model::prelude::UserId = ctx.author().id;
