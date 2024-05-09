@@ -8,7 +8,7 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
     
 Here are some things you can ask me to do:
 
-`save_me`  - Start a new scheduling thread. You can provide the first day to start surveying at or I'll default to tomorrow. Example `/orpheus /save_me`
+`save_me`  - Start a new scheduling thread. You can provide the first day to start surveying at or I'll default to tomorrow. Example `/orpheus save_me`
 
 I'll automatically cross out days that don't work for one or more required attendees (see below), and if no days work I'll start a new thread with dates immediately after the current ones.
 
