@@ -1,6 +1,6 @@
 use serenity::all::{ActivityData, GetMessages, UserId};
 
-use crate::commands::update::update;
+
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
