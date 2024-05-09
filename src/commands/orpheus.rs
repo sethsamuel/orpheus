@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
-use chrono::{NaiveDate, Utc};
+use chrono::{Days, NaiveDate, Utc};
 use serenity::all::ActivityData;
 
 #[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
@@ -35,7 +35,7 @@ pub async fn save_me(
         Some(_) => parsed.unwrap(),
         _ => Utc::now().naive_local().date(),
     };
-    let end_date = start_date;
+    let end_date = start_date.checked_sub_days(Days::new(1)).unwrap();
     // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
 
     let host: serenity::model::prelude::UserId = ctx.author().id;

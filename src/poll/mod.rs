@@ -8,7 +8,7 @@ use ::serenity::{
     futures::future::join_all,
 };
 use base64::Engine;
-use chrono::{Datelike, Days, NaiveDate, NaiveTime, Utc};
+use chrono::{Datelike, Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
 use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
@@ -304,10 +304,7 @@ impl Poll {
         let mut new_poll = self.clone();
         new_poll.start_date = new_poll.start_date.checked_add_days(Days::new(7)).unwrap();
         new_poll.eliminated_days = vec![];
-        new_poll.end_date = Utc::now()
-            .date_naive()
-            .checked_add_days(Days::new(1))
-            .unwrap();
+        new_poll.end_date = new_poll.start_date.checked_sub_days(Days::new(1)).unwrap();
         let (channel_id, _) = new_poll
             .start_thread(
                 http,
