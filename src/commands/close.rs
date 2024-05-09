@@ -41,7 +41,6 @@ pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
             ctx.channel_id(),
             &EditThread::new()
                 .locked(true)
-                .archived(true)
                 .auto_archive_duration(AutoArchiveDuration::OneDay),
             Some("Voting closed"),
         )

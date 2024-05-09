@@ -339,7 +339,6 @@ impl Poll {
                 message.channel_id,
                 &EditThread::new()
                     .locked(true)
-                    .archived(true)
                     .auto_archive_duration(AutoArchiveDuration::OneDay),
                 Some("Voting closed"),
             )
