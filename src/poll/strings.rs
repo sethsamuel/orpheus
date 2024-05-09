@@ -23,7 +23,7 @@ impl Poll {
 
     pub fn required_users_line(&self) -> String {
         let mut line = "Required attendees:".to_string();
-        for u in self.required_users.clone().unwrap_or_default().iter() {
+        for u in self.required_users.clone().iter() {
             line += format!(" <@{}>", u).as_str();
         }
         line.to_string()

@@ -1,7 +1,9 @@
+use std::collections::HashSet;
+
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 use chrono::{NaiveDate, Utc};
-use serenity::all::{ActivityData, User, UserId};
+use serenity::all::ActivityData;
 
 #[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
 pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
@@ -13,7 +15,6 @@ pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
 pub async fn save_me(
     ctx: Context<'_>,
     #[description = "Event name"] name: String,
-    #[description = "Required users"] required_users: Vec<User>,
     #[description = "First day to poll (mm/dd/yy)"] first_poll_date: Option<String>,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await;
@@ -41,7 +42,7 @@ pub async fn save_me(
     let poll = Poll {
         host,
         event_name: name,
-        required_users: Some(required_users.iter().map(|u| u.id).collect::<Vec<UserId>>()),
+        required_users: HashSet::new(),
         end_date,
         start_date,
         ..Default::default()

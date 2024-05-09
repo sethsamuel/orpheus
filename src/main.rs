@@ -26,6 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
                 commands::orpheus::orpheus(),
                 commands::start::start(),
                 commands::stop::stop(),
+                commands::add::add(),
                 commands::update::update(),
                 commands::close::close(),
                 commands::next_dates::next_dates(),

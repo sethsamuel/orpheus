@@ -28,7 +28,6 @@ pub async fn nag(ctx: Context<'_>) -> Result<(), Error> {
     let nag_users = poll
         .required_users
         .clone()
-        .unwrap_or_default()
         .iter()
         .filter(|u| !finished_users.contains(u))
         .map(|u| format!("<@{}>", u))

@@ -24,7 +24,7 @@ pub struct Poll {
     pub host: serenity::model::prelude::UserId,
     pub end_date: NaiveDate,
     pub start_date: NaiveDate,
-    pub required_users: Option<Vec<UserId>>,
+    pub required_users: HashSet<UserId>,
     #[serde(skip)]
     pub eliminated_days: Vec<NumberEmojis>,
 }
@@ -163,7 +163,7 @@ impl Poll {
         let mut eliminated_days: HashSet<&NumberEmojis> = HashSet::new();
         let mut required_users: HashSet<UserId> = HashSet::new();
         required_users.insert(self.host);
-        let poll_required_users = self.required_users.clone().unwrap_or_default();
+        let poll_required_users = self.required_users.clone();
         poll_required_users
             .iter()
             .all(|u| required_users.insert(*u));
