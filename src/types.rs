@@ -10,6 +10,16 @@ pub enum OrpheusStatus {
     Stopped,
 }
 
+impl OrpheusStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            OrpheusStatus::Waiting => "",
+            OrpheusStatus::Processing => "Processing...",
+            OrpheusStatus::Stopped => "Stopped",
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct State {
     // We lock the state for all polls when updating one

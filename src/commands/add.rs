@@ -1,11 +1,10 @@
 use serenity::all::{ActivityData, GetMessages, UserId};
 
-
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command, prefix_command)]
 pub async fn add(
     ctx: Context<'_>,
     #[description = "Users"]
@@ -48,8 +47,9 @@ pub async fn add(
         .update_message(ctx.http(), thread_message.channel_id, thread_message.id)
         .await;
 
+    *status = OrpheusStatus::Waiting;
     ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom("Waiting...")));
+        .set_activity(Some(ActivityData::custom(status.as_str())));
 
     Ok(())
 }

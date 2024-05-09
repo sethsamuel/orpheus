@@ -1,11 +1,21 @@
 use std::collections::HashSet;
 
+use crate::commands::add::add;
+use crate::commands::close::close;
+use crate::commands::help::help;
+use crate::commands::nag::nag;
+use crate::commands::next_dates::next_dates;
+use crate::commands::update::update;
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 use chrono::{Days, NaiveDate, Utc};
 use serenity::all::ActivityData;
 
-#[poise::command(slash_command, subcommands("save_me"), subcommand_required)]
+#[poise::command(
+    slash_command,
+    subcommands("help", "save_me", "add", "update", "nag", "close", "next_dates"),
+    subcommand_required
+)]
 pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {
     // This will never be called, because `subcommand_required` parameter is set
     Ok(())
@@ -60,7 +70,7 @@ pub async fn save_me(
 
     *status = OrpheusStatus::Waiting;
     ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom("Waiting...")));
+        .set_activity(Some(ActivityData::custom(status.as_str())));
 
     println!("Command handled");
 

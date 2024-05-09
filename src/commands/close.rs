@@ -4,7 +4,7 @@ use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command, prefix_command)]
 pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
     let mut status = ctx.data().status.lock().await;
     *status = OrpheusStatus::Processing;
@@ -48,8 +48,9 @@ pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
         .inspect_err(|e| println!("Error closing thread {}", e))
         .inspect(|_| println!("Channel archived"));
 
+    *status = OrpheusStatus::Waiting;
     ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom("Waiting...")));
+        .set_activity(Some(ActivityData::custom(status.as_str())));
 
     Ok(())
 }

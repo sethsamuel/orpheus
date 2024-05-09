@@ -67,7 +67,8 @@ pub async fn on_reaction_change(
         .unwrap()
         .locked
     {
-        ctx.set_activity(Some(ActivityData::custom("Waiting...")));
+        *status = OrpheusStatus::Waiting;
+        ctx.set_activity(Some(ActivityData::custom(status.as_str())));
 
         return Ok(());
     }
@@ -87,7 +88,7 @@ pub async fn on_reaction_change(
         .await;
 
     *status = OrpheusStatus::Waiting;
-    ctx.set_activity(Some(ActivityData::custom("Waiting...")));
+    ctx.set_activity(Some(ActivityData::custom(status.as_str())));
 
     Ok(())
 }

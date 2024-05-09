@@ -14,7 +14,7 @@ pub async fn start(ctx: Context<'_>) -> Result<(), Error> {
     let mut status = ctx.data().status.lock().await;
     *status = OrpheusStatus::Waiting;
     ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom("Waiting...")));
+        .set_activity(Some(ActivityData::custom(status.as_str())));
 
     let _ = ctx.reply("Ok, I'm started and waiting.").await;
 
