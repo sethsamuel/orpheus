@@ -8,8 +8,10 @@ mod types;
 use types::{Error, State};
 
 mod commands;
+mod discord;
 mod handlers;
 mod poll;
+mod telephone;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {

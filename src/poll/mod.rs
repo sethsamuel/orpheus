@@ -2,9 +2,7 @@ pub mod consts;
 pub mod strings;
 
 use ::serenity::{
-    all::{
-        AutoArchiveDuration, ChannelType, CreateMessage, EditThread, Http, Message, ReactionType,
-    },
+    all::{AutoArchiveDuration, CreateMessage, EditThread, Http, Message, ReactionType},
     futures::future::join_all,
 };
 use base64::Engine;
@@ -12,9 +10,11 @@ use chrono::{Datelike, Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
 use poise::serenity_prelude as serenity;
 use serde::{Deserialize, Serialize};
-use serenity::all::{ChannelId, EditMessage, MessageId, UserId};
+use serenity::all::{ChannelId, MessageId, UserId};
 use std::collections::{HashMap, HashSet};
 use strings::strip_zero_padding;
+
+use crate::discord::thread;
 
 use self::consts::NumberEmojis;
 
@@ -37,11 +37,6 @@ impl TryFrom<String> for Poll {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let lines = value.lines();
-
-        // let mut poll = Poll::default();
-        // poll.event_name = Poll::event_name_from_line(lines.next().unwrap());
-        // poll.host = Poll::host_from_line(lines.next().unwrap()).parse().unwrap();
-        // poll.end_date = Poll::end_date_from_line(lines.next().unwrap());
 
         let line = lines.last().unwrap().trim().replace('|', "");
         let base = base64::prelude::BASE64_STANDARD.decode(line).unwrap();
@@ -241,15 +236,7 @@ impl Poll {
         channel_id: ChannelId,
         message_id: MessageId,
     ) -> Result<(), UpdateError> {
-        let new_content: String = self.clone().into();
-        let _ = http
-            .edit_message(
-                channel_id,
-                message_id,
-                &EditMessage::new().content(new_content),
-                vec![],
-            )
-            .await;
+        let _ = thread::update(http, channel_id, message_id, self.clone()).await;
 
         Ok(())
     }
@@ -260,39 +247,25 @@ impl Poll {
         http: &Http,
         channel_id: ChannelId,
     ) -> Result<(ChannelId, MessageId), ::serenity::Error> {
-        let c = http
-            .create_thread(
-                channel_id,
-                &serenity::builder::CreateThread::new(self.event_name.to_string())
-                    .kind(ChannelType::PublicThread),
-                Some("Time to schedule"),
-            )
-            .await
-            .unwrap();
-
-        let message_str: String = self.clone().into();
-
-        let message = c.id.say(http, message_str).await;
-        let message_id = message.unwrap().id;
+        let (c, message_id) =
+            thread::create(http, channel_id, &self.event_name, self.clone()).await;
 
         for n in NUMBERS {
-            let _ = http
-                .create_reaction(
-                    c.id,
-                    message_id,
-                    &serenity::all::ReactionType::Unicode(n.as_str().to_string()),
-                )
-                .await
-                .inspect_err(|e| println!("Failed to add emoji! {:?}", e));
-        }
-        let _ = http
-            .create_reaction(
+            http.create_reaction(
                 c.id,
                 message_id,
-                &serenity::all::ReactionType::Unicode(FINISHED.to_string()),
+                &serenity::all::ReactionType::Unicode(n.as_str().to_string()),
             )
             .await
-            .inspect_err(|e| println!("Failed to add emoji! {:?}", e));
+            .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
+        }
+        http.create_reaction(
+            c.id,
+            message_id,
+            &serenity::all::ReactionType::Unicode(FINISHED.to_string()),
+        )
+        .await
+        .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
         Ok((c.id, message_id))
     }
 }

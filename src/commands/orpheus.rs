@@ -5,6 +5,8 @@ use crate::commands::close::close;
 use crate::commands::help::help;
 use crate::commands::nag::nag;
 use crate::commands::next_dates::next_dates;
+use crate::commands::set_lead::set_lead;
+use crate::commands::story_time::story_time;
 use crate::commands::update::update;
 use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
@@ -13,7 +15,17 @@ use serenity::all::ActivityData;
 
 #[poise::command(
     slash_command,
-    subcommands("help", "save_me", "add", "update", "nag", "close", "next_dates"),
+    subcommands(
+        "help",
+        "save_me",
+        "add",
+        "update",
+        "nag",
+        "close",
+        "next_dates",
+        "story_time",
+        "set_lead"
+    ),
     subcommand_required
 )]
 pub async fn orpheus(_: Context<'_>) -> Result<(), Error> {

@@ -4,6 +4,8 @@ pub mod help;
 pub mod nag;
 pub mod next_dates;
 pub mod orpheus;
+pub mod set_lead;
 pub mod start;
 pub mod stop;
+pub mod story_time;
 pub mod update;
