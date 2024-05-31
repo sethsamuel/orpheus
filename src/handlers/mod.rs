@@ -9,8 +9,8 @@ use poise::serenity_prelude as serenity;
 
 use crate::poll::consts::FINISHED;
 
-use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
+use crate::telephone::Telephone;
 use crate::types::OrpheusStatus;
 
 use super::types::{Error, State};
@@ -73,19 +73,17 @@ pub async fn on_reaction_change(
         return Ok(());
     }
 
-    let mut poll = Poll::try_from(message.content.clone()).unwrap();
-
-    let _ = poll
-        .update_days(ctx.http(), bot_id, message.channel_id, message.id)
-        .await;
-    if poll.eliminated_days.len() == NUMBERS.len() {
-        println!("All days eliminated!");
-        poll.next_dates(ctx.http(), &message).await;
+    let poll = Poll::try_from(message.content.clone());
+    match poll.ok() {
+        Some(poll) => poll.on_reaction(ctx, bot_id, message).await,
+        None => {
+            let telephone = Telephone::try_from(message.content.clone());
+            match telephone.ok() {
+                Some(telephone) => telephone.on_reaction(ctx, bot_id, message).await,
+                None => println!("Reaction to undecodable message {:?}", message.content),
+            }
+        }
     }
-
-    let _ = poll
-        .update_message(ctx.http(), message.channel_id, message.id)
-        .await;
 
     *status = OrpheusStatus::Waiting;
     ctx.set_activity(Some(ActivityData::custom(status.as_str())));

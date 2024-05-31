@@ -1,6 +1,6 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
-use serenity::all::UserId;
+use serenity::all::{Context, Message, UserId};
 
 pub mod consts;
 
@@ -43,4 +43,9 @@ impl From<Telephone> for String {
 
         message_str
     }
+}
+
+impl Telephone {
+    #[tracing::instrument]
+    pub async fn on_reaction(self, ctx: &Context, bot_id: UserId, message: Message) {}
 }

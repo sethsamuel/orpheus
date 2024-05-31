@@ -17,7 +17,8 @@ pub async fn set_lead(
     ctx.serenity_context()
         .set_activity(Some(ActivityData::custom("Processing...")));
 
-    let (mut telephone, thread_message) = thread::get::<Telephone>(ctx).await;
+    let (telephone_option, thread_message) = thread::get::<Telephone>(ctx).await;
+    let mut telephone = telephone_option.unwrap();
     println!("{:?}", telephone);
     if telephone.host != ctx.author().id {
         let _ = ctx

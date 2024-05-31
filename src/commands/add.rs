@@ -17,7 +17,8 @@ pub async fn add(
     ctx.serenity_context()
         .set_activity(Some(ActivityData::custom("Processing...")));
 
-    let (mut poll, thread_message) = thread::get::<Poll>(ctx).await;
+    let (poll_option, thread_message) = thread::get::<Poll>(ctx).await;
+    let mut poll = poll_option.unwrap();
     println!("{:?}", poll);
     if poll.host != ctx.author().id {
         let _ = ctx

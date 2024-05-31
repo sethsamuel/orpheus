@@ -25,7 +25,7 @@ pub async fn create(
     (c, message_id)
 }
 
-pub async fn get<T>(ctx: Context<'_>) -> (T, Message)
+pub async fn get<T>(ctx: Context<'_>) -> (Option<T>, Message)
 where
     T: TryFrom<String>,
     T::Error: Debug,
@@ -38,7 +38,7 @@ where
         .await
         .unwrap();
     let thread_message = thread.last().unwrap().clone();
-    let object = T::try_from(thread_message.content.clone()).unwrap();
+    let object = T::try_from(thread_message.content.clone()).ok();
 
     (object, thread_message)
 }

@@ -1,6 +1,7 @@
 pub mod consts;
 pub mod strings;
 
+use ::serenity::all::{CacheHttp, Context};
 use ::serenity::{
     all::{AutoArchiveDuration, CreateMessage, EditThread, Http, Message, ReactionType},
     futures::future::join_all,
@@ -267,6 +268,23 @@ impl Poll {
         .await
         .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
         Ok((c.id, message_id))
+    }
+}
+
+impl Poll {
+    #[tracing::instrument]
+    pub async fn on_reaction(mut self, ctx: &Context, bot_id: UserId, message: Message) {
+        let _ = self
+            .update_days(ctx.http(), bot_id, message.channel_id, message.id)
+            .await;
+        if self.eliminated_days.len() == NUMBERS.len() {
+            println!("All days eliminated!");
+            self.next_dates(ctx.http(), &message).await;
+        }
+
+        let _ = self
+            .update_message(ctx.http(), message.channel_id, message.id)
+            .await;
     }
 }
 
