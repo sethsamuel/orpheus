@@ -42,9 +42,9 @@ impl TryFrom<String> for Poll {
         let line = lines.last().unwrap().trim().replace('|', "");
         let base = base64::prelude::BASE64_STANDARD.decode(line).unwrap();
         let str = String::from_utf8(base).unwrap();
-        let poll = serde_json::from_str(&str).unwrap();
+        
 
-        Ok(poll)
+        serde_json::from_str(&str).map_err(|_| FromStringError)
     }
 }
 
@@ -221,7 +221,7 @@ impl Poll {
         channel_id: ChannelId,
         message_id: MessageId,
     ) -> Result<(), UpdateError> {
-        let _ = thread::update(http, channel_id, message_id, self.clone()).await;
+        _ = thread::update(http, channel_id, message_id, self.clone()).await;
 
         Ok(())
     }
@@ -264,7 +264,7 @@ impl Poll {
         reaction: &Reaction,
         message: Message,
     ) {
-        let _ = self
+        _ = self
             .update_days(ctx.http(), bot_id, message.channel_id, message.id)
             .await;
         if self.eliminated_days.len() == NUMBERS.len() {
@@ -272,7 +272,7 @@ impl Poll {
             self.next_dates(ctx.http(), &message).await;
         }
 
-        let _ = self
+        _ = self
             .update_message(ctx.http(), message.channel_id, message.id)
             .await;
     }
@@ -301,7 +301,7 @@ impl Poll {
             .await
             .unwrap();
 
-        let _ = http
+        _ = http
                     .send_message(
                         message.channel_id,
                         vec![],
@@ -312,7 +312,7 @@ impl Poll {
                     )
                     .await;
 
-        let _ = http
+        _ = http
             .edit_thread(
                 message.channel_id,
                 &EditThread::new()

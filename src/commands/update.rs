@@ -1,7 +1,9 @@
 use serenity::all::GetMessages;
 
+use crate::discord::thread;
 use crate::poll::consts::NUMBERS;
 use crate::poll::Poll;
+use crate::telephone::Telephone;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
@@ -22,22 +24,27 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
         .await
         .unwrap();
     let message = thread.last().unwrap().clone();
-    let mut poll = Poll::try_from(message.content.clone()).unwrap();
-    println!("{:?}", poll);
+    if let Ok(mut poll) = Poll::try_from(message.content.clone()) {
+        println!("{:?}", poll);
 
-    let _ = poll
-        .update_days(ctx.http(), bot_id, message.channel_id, message.id)
-        .await;
-    if poll.eliminated_days.len() == NUMBERS.len() {
-        println!("All days eliminated!");
-        poll.next_dates(ctx.http(), &message).await;
+        _ = poll
+            .update_days(ctx.http(), bot_id, message.channel_id, message.id)
+            .await;
+        if poll.eliminated_days.len() == NUMBERS.len() {
+            println!("All days eliminated!");
+            poll.next_dates(ctx.http(), &message).await;
+        }
+
+        _ = poll
+            .update_message(ctx.http(), ctx.channel_id(), message.id)
+            .await;
+    } else if let Ok(mut telephone) = Telephone::try_from(message.content.clone()) {
+        telephone
+            .update_players(ctx.http(), bot_id, ctx.channel_id(), message.id)
+            .await;
+        _ = thread::update(ctx.http(), ctx.channel_id(), message.id, telephone).await;
     }
-
-    let _ = poll
-        .update_message(ctx.http(), ctx.channel_id(), message.id)
-        .await;
-
-    let _ = ctx.reply("Updated!").await;
+    _ = ctx.reply("Updated!").await;
 
     Ok(())
 }

@@ -39,7 +39,7 @@ pub async fn save_me(
     #[description = "Event name"] name: String,
     #[description = "First day to poll (mm/dd/yy)"] first_poll_date: Option<String>,
 ) -> Result<(), Error> {
-    let _ = ctx.defer().await;
+    _ = ctx.defer().await;
 
     let mut status = ctx.data().status.lock().await;
     if *status == OrpheusStatus::Stopped {
@@ -75,7 +75,7 @@ pub async fn save_me(
         .await
         .unwrap();
 
-    let _ = ctx
+    _ = ctx
         .say(format!("Created a new thread <#{}>", channel_id))
         .await;
     println!("Starting thread");

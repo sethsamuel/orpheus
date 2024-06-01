@@ -21,7 +21,7 @@ pub async fn set_lead(
     let mut telephone = telephone_option.unwrap();
     println!("{:?}", telephone);
     if telephone.host != ctx.author().id {
-        let _ = ctx
+        _ = ctx
             .reply(format!(
                 "Sorry, only the host (<@{}>) can set the story lead",
                 telephone.host
@@ -40,7 +40,7 @@ pub async fn set_lead(
     match user_id {
         Some(id) => telephone.lead = Some(UserId::new(id)),
         None => {
-            let _ = ctx
+            _ = ctx
                 .reply("You must supply a valid user to take the lead!")
                 .await;
             return Ok(());
@@ -49,7 +49,7 @@ pub async fn set_lead(
 
     telephone.set_lead();
 
-    let _ = thread::update(
+    _ = thread::update(
         ctx.http(),
         thread_message.channel_id,
         thread_message.id,

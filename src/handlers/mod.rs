@@ -7,7 +7,7 @@ use ::serenity::all::Reaction;
 
 use poise::serenity_prelude as serenity;
 
-use crate::poll::consts::FINISHED;
+
 
 use crate::poll::Poll;
 use crate::telephone::Telephone;
@@ -42,9 +42,6 @@ pub async fn on_reaction_change(
     if reaction.user_id.unwrap() == bot_id {
         return Ok(());
     }
-    if !reaction.emoji.unicode_eq(FINISHED) {
-        return Ok(());
-    }
 
     let mut status = data.status.lock().await;
     if *status == OrpheusStatus::Stopped {
@@ -73,16 +70,14 @@ pub async fn on_reaction_change(
         return Ok(());
     }
 
-    let poll = Poll::try_from(message.content.clone());
-    match poll.ok() {
-        Some(poll) => poll.on_reaction(ctx, bot_id, reaction, message).await,
-        None => {
-            let telephone = Telephone::try_from(message.content.clone());
-            match telephone.ok() {
-                Some(telephone) => telephone.on_reaction(ctx, bot_id, reaction, message).await,
-                None => println!("Reaction to undecodable message {:?}", message.content),
-            }
-        }
+    if let Ok(poll) = Poll::try_from(message.content.clone()) {
+        println!("{:?}", poll);
+        poll.on_reaction(ctx, bot_id, reaction, message).await;
+    } else if let Ok(telephone) = Telephone::try_from(message.content.clone()) {
+        println!("{:?}", telephone);
+        telephone.on_reaction(ctx, bot_id, reaction, message).await
+    } else {
+        println!("Reaction to undecodable message {:?}", message.content)
     }
 
     *status = OrpheusStatus::Waiting;

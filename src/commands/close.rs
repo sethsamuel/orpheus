@@ -22,7 +22,7 @@ pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
     let poll = Poll::try_from(thread_message.content.clone()).unwrap();
     println!("{:?}", poll);
     if poll.host != ctx.author().id {
-        let _ = ctx
+        _ = ctx
             .reply(format!(
                 "Sorry, only the host (<@{}>) can close the thread",
                 poll.host
@@ -31,11 +31,11 @@ pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    let _ = ctx
+    _ = ctx
         .reply("This thread is locked and will be archived in one day.")
         .await;
 
-    let _ = ctx
+    _ = ctx
         .http()
         .edit_thread(
             ctx.channel_id(),

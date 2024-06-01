@@ -21,7 +21,7 @@ pub async fn add(
     let mut poll = poll_option.unwrap();
     println!("{:?}", poll);
     if poll.host != ctx.author().id {
-        let _ = ctx
+        _ = ctx
             .reply(format!(
                 "Sorry, only the host (<@{}>) can add users",
                 poll.host

@@ -15,7 +15,7 @@ mod telephone;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
-    let _ = dotenv();
+    _ = dotenv();
     let (_guard, tracer_shutdown) = datadog_tracing::init()?;
 
     let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");

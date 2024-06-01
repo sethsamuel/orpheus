@@ -4,7 +4,7 @@ use crate::types::{Context, Error};
 #[tracing::instrument]
 #[poise::command(slash_command, prefix_command)]
 pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
-    let _ = ctx.reply(format!("Hi, I'm your friendly neighborhood bot, Orpheus! I help you escape scheduling hell, mostly.
+    _ = ctx.reply(format!("Hi, I'm your friendly neighborhood bot, Orpheus! I help you escape scheduling hell, mostly.
     
 Here are some things you can ask me to do:
 

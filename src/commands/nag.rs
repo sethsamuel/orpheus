@@ -37,9 +37,9 @@ pub async fn nag(ctx: Context<'_>) -> Result<(), Error> {
         let nag_str: String = nag_users.join(" ");
         let message = format!("Sorry to bother you {}, but could you please take the time to fill out the current poll?\n\nThanks in advance, your friendly nagging bot.", nag_str);
 
-        let _ = ctx.reply(message).await;
+        _ = ctx.reply(message).await;
     } else {
-        let _ = ctx.reply("No one left to nag, thanks everyone!").await;
+        _ = ctx.reply("No one left to nag, thanks everyone!").await;
     }
     Ok(())
 }

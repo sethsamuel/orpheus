@@ -52,7 +52,7 @@ pub async fn update(
     object: impl Into<String> + Debug,
 ) -> Result<(), UpdateError> {
     let new_content: String = object.into();
-    let _ = http
+    _ = http
         .edit_message(
             channel_id,
             message_id,

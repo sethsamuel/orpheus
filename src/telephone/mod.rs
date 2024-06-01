@@ -2,7 +2,9 @@ use std::collections::HashSet;
 
 use base64::Engine;
 use serde::{Deserialize, Serialize};
-use serenity::all::{CacheHttp, Context, CreateMessage, Message, Reaction, UserId};
+use serenity::all::{
+    CacheHttp, ChannelId, Context, CreateMessage, Http, Message, MessageId, Reaction, UserId,
+};
 
 use crate::discord::{self, thread};
 use rand::seq::SliceRandom;
@@ -34,9 +36,8 @@ impl TryFrom<String> for Telephone {
         let line = lines.last().unwrap().trim().replace('|', "");
         let base = base64::prelude::BASE64_STANDARD.decode(line).unwrap();
         let str = String::from_utf8(base).unwrap();
-        let telephone = serde_json::from_str(&str).unwrap();
 
-        Ok(telephone)
+        serde_json::from_str(&str).map_err(|_| FromStringError)
     }
 }
 
@@ -87,6 +88,48 @@ impl Telephone {
 }
 
 impl Telephone {
+    pub async fn update_players(
+        &mut self,
+        http: &Http,
+        bot_id: UserId,
+        channel_id: ChannelId,
+        message_id: MessageId,
+    ) {
+        println!("Updating");
+        {
+            let users =
+                discord::get_reaction_users(http, channel_id, message_id, STORY_TELLER.to_string())
+                    .await
+                    .unwrap()
+                    .1;
+            let mut user_ids: Vec<UserId> = users
+                .iter()
+                .map(|u| u.id)
+                .filter(|id| *id != bot_id)
+                .collect();
+            println!("{:?}", user_ids);
+
+            user_ids.shuffle(&mut rand::thread_rng());
+            self.players = user_ids;
+            self.set_lead();
+        }
+
+        {
+            let users =
+                discord::get_reaction_users(http, channel_id, message_id, FINISHED.to_string())
+                    .await
+                    .unwrap()
+                    .1;
+            let user_ids = users.iter().map(|u| u.id).filter(|id| *id != bot_id);
+            println!("{:?}", user_ids);
+
+            self.finished_players = HashSet::from_iter(user_ids);
+            self.set_lead();
+        }
+    }
+}
+
+impl Telephone {
     #[tracing::instrument]
     pub async fn on_reaction(
         mut self,
@@ -95,25 +138,16 @@ impl Telephone {
         reaction: &Reaction,
         message: Message,
     ) {
+        println!("handling {}", reaction.emoji.to_string().as_str());
         match reaction.emoji.to_string().as_str() {
             STORY_TELLER => {
-                let users = discord::get_reaction_users(
-                    ctx.http(),
-                    message.channel_id,
-                    message.id,
-                    FINISHED.to_string(),
-                )
-                .await
-                .unwrap()
-                .1;
-                let mut user_ids: Vec<UserId> = users.iter().map(|u| u.id).collect();
-                user_ids.shuffle(&mut rand::thread_rng());
-                self.players = user_ids;
-                self.set_lead();
+                let bot_id = ctx.http().get_current_user().await.unwrap().id;
+                self.update_players(ctx.http(), bot_id, message.channel_id, message.id)
+                    .await;
             }
             FINISHED => {
-                let user_id = reaction.user_id.unwrap();
-                self.finished_players.insert(user_id);
+                self.update_players(ctx.http(), bot_id, message.channel_id, message.id)
+                    .await;
 
                 let next_player_id = self.next_player_id();
                 if let Some(next_player_id) = next_player_id {

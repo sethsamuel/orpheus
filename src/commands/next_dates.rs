@@ -22,7 +22,7 @@ pub async fn next_dates(ctx: Context<'_>) -> Result<(), Error> {
     let poll = Poll::try_from(thread_message.content.clone()).unwrap();
     println!("{:?}", poll);
     if poll.host != ctx.author().id {
-        let _ = ctx
+        _ = ctx
             .reply(format!(
                 "Sorry, only the host (<@{}>) can trigger the next dates",
                 poll.host

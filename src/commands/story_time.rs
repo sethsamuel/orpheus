@@ -17,7 +17,7 @@ pub async fn story_time(
     nag_interval: u8,
     #[description = "Shared folder"] folder_url: String,
 ) -> Result<(), Error> {
-    let _ = ctx.defer().await;
+    _ = ctx.defer().await;
 
     let telephone = Telephone {
         host: ctx.author().id,
