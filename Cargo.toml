@@ -15,6 +15,7 @@ serde_json = "1.0.116"
 chrono = "0.4.38"
 regex = "1.10.4"
 base64 = "0.22.1"
+rand = "0.8.5"
 
 datadog-tracing = "0.2.1"
 tracing = "0.1.40"

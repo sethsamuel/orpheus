@@ -1,7 +1,7 @@
 pub mod consts;
 pub mod strings;
 
-use ::serenity::all::{CacheHttp, Context};
+use ::serenity::all::{CacheHttp, Context, Reaction};
 use ::serenity::{
     all::{AutoArchiveDuration, CreateMessage, EditThread, Http, Message, ReactionType},
     futures::future::join_all,
@@ -15,7 +15,7 @@ use serenity::all::{ChannelId, MessageId, UserId};
 use std::collections::{HashMap, HashSet};
 use strings::strip_zero_padding;
 
-use crate::discord::thread;
+use crate::discord::{self, thread};
 
 use self::consts::NumberEmojis;
 
@@ -95,9 +95,6 @@ impl From<Poll> for String {
             format!("\nIf you're sure you can't make any days, just hit {FINISHED}.").as_str();
         message_str += "\n";
         message_str += "\n";
-        // message_str += format!("Orpehus is {}");
-        // message_str += "\n";
-        // message_str += "\n";
 
         message_str += "Orpehus Magic String (feel free to ignore):";
         message_str += "\n";
@@ -133,11 +130,11 @@ impl Poll {
         }
         let mut users_map: HashMap<NumberEmojis, Vec<UserId>> = HashMap::new();
 
-        let rs = NUMBERS
-            .iter()
-            .map(|n| ReactionType::Unicode(n.as_str().to_string()));
+        let rs = NUMBERS.iter();
         let fs: Vec<_> = rs
-            .map(move |r| get_reaction_users(http, channel_id, message_id, r))
+            .map(move |r| {
+                discord::get_reaction_users(http, channel_id, message_id, r.as_str().to_string())
+            })
             .collect();
 
         let user_reactions = join_all(fs).await;
@@ -215,19 +212,6 @@ impl Poll {
     }
 }
 
-#[tracing::instrument]
-async fn get_reaction_users(
-    http: &Http,
-    channel_id: ChannelId,
-    message_id: MessageId,
-    r: ReactionType,
-) -> Result<(ReactionType, Vec<serenity::User>), ::serenity::Error> {
-    let users = http
-        .get_reaction_users(channel_id, message_id, &r, 50, None)
-        .await?;
-    Ok((r, users))
-}
-
 pub struct UpdateError;
 impl Poll {
     #[tracing::instrument]
@@ -273,7 +257,13 @@ impl Poll {
 
 impl Poll {
     #[tracing::instrument]
-    pub async fn on_reaction(mut self, ctx: &Context, bot_id: UserId, message: Message) {
+    pub async fn on_reaction(
+        mut self,
+        ctx: &Context,
+        bot_id: UserId,
+        reaction: &Reaction,
+        message: Message,
+    ) {
         let _ = self
             .update_days(ctx.http(), bot_id, message.channel_id, message.id)
             .await;

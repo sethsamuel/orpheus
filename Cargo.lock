@@ -1012,6 +1012,7 @@ dependencies = [
  "datadog-tracing",
  "dotenvy",
  "poise",
+ "rand",
  "regex",
  "serde",
  "serde_json",

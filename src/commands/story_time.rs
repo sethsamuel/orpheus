@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     discord::thread,
     telephone::{
@@ -13,13 +15,16 @@ pub async fn story_time(
     #[description = "Nag every X days"]
     #[min = 1]
     nag_interval: u8,
+    #[description = "Shared folder"] folder_url: String,
 ) -> Result<(), Error> {
     let _ = ctx.defer().await;
 
     let telephone = Telephone {
         host: ctx.author().id,
+        folder_url,
         lead: None,
         players: vec![],
+        finished_players: HashSet::new(),
         nag_interval,
     };
 
@@ -30,8 +35,7 @@ pub async fn story_time(
         telephone,
     )
     .await;
-    ctx
-        .http()
+    ctx.http()
         .create_reaction(
             channel.id,
             message_id,
@@ -40,8 +44,16 @@ pub async fn story_time(
         .await
         .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
 
-    ctx
-        .http()
+    ctx.http()
+        .create_reaction(
+            channel.id,
+            message_id,
+            &serenity::all::ReactionType::Unicode(FINISHED.to_string()),
+        )
+        .await
+        .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
+
+    ctx.http()
         .create_reaction(
             channel.id,
             message_id,

@@ -47,6 +47,8 @@ pub async fn set_lead(
         }
     }
 
+    telephone.set_lead();
+
     let _ = thread::update(
         ctx.http(),
         thread_message.channel_id,

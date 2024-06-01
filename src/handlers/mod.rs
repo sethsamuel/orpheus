@@ -75,11 +75,11 @@ pub async fn on_reaction_change(
 
     let poll = Poll::try_from(message.content.clone());
     match poll.ok() {
-        Some(poll) => poll.on_reaction(ctx, bot_id, message).await,
+        Some(poll) => poll.on_reaction(ctx, bot_id, reaction, message).await,
         None => {
             let telephone = Telephone::try_from(message.content.clone());
             match telephone.ok() {
-                Some(telephone) => telephone.on_reaction(ctx, bot_id, message).await,
+                Some(telephone) => telephone.on_reaction(ctx, bot_id, reaction, message).await,
                 None => println!("Reaction to undecodable message {:?}", message.content),
             }
         }
