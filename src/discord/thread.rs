@@ -25,6 +25,7 @@ pub async fn create(
     (c, message_id)
 }
 
+#[tracing::instrument]
 pub async fn get<T>(ctx: Context<'_>) -> (Option<T>, Message)
 where
     T: TryFrom<String>,
@@ -38,9 +39,18 @@ where
         .await
         .unwrap();
     let thread_message = thread.last().unwrap().clone();
-    let object = T::try_from(thread_message.content.clone()).ok();
+    let object = try_from(&thread_message);
 
     (object, thread_message)
+}
+
+#[tracing::instrument]
+pub fn try_from<T>(message: &Message) -> Option<T>
+where
+    T: TryFrom<String>,
+    T::Error: Debug,
+{
+    T::try_from(message.content.clone()).ok()
 }
 
 pub struct UpdateError;
@@ -62,4 +72,15 @@ pub async fn update(
         .await;
 
     Ok(())
+}
+
+pub async fn is_locked(http: &Http, channel_id: ChannelId) -> bool {
+    http.get_channel(channel_id)
+        .await
+        .unwrap()
+        .guild()
+        .unwrap()
+        .thread_metadata
+        .unwrap()
+        .locked
 }

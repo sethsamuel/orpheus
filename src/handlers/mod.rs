@@ -7,10 +7,10 @@ use ::serenity::all::Reaction;
 
 use poise::serenity_prelude as serenity;
 
-
-
+use crate::discord::thread;
 use crate::poll::Poll;
 use crate::telephone::Telephone;
+use crate::types::DiscordMessage;
 use crate::types::OrpheusStatus;
 
 use super::types::{Error, State};
@@ -53,17 +53,10 @@ pub async fn on_reaction_change(
 
     let _lock = data.lock.lock().await;
     let message = reaction.message(ctx.http()).await.unwrap();
+    let message_id = message.id;
+    let channel_id = message.channel_id;
 
-    if message
-        .channel(ctx.http())
-        .await
-        .unwrap()
-        .guild()
-        .unwrap()
-        .thread_metadata
-        .unwrap()
-        .locked
-    {
+    if thread::is_locked(ctx.http(), message.channel_id).await {
         *status = OrpheusStatus::Waiting;
         ctx.set_activity(Some(ActivityData::custom(status.as_str())));
 
@@ -73,9 +66,17 @@ pub async fn on_reaction_change(
     if let Ok(poll) = Poll::try_from(message.content.clone()) {
         println!("{:?}", poll);
         poll.on_reaction(ctx, bot_id, reaction, message).await;
+        _ = data.tx.send(DiscordMessage {
+            channel_id,
+            message_id,
+        });
     } else if let Ok(telephone) = Telephone::try_from(message.content.clone()) {
         println!("{:?}", telephone);
-        telephone.on_reaction(ctx, bot_id, reaction, message).await
+        telephone.on_reaction(ctx, bot_id, reaction, message).await;
+        _ = data.tx.send(DiscordMessage {
+            channel_id,
+            message_id,
+        });
     } else {
         println!("Reaction to undecodable message {:?}", message.content)
     }

@@ -23,7 +23,7 @@ impl OrpheusStatus {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct DiscordMessage {
     pub channel_id: ChannelId,
     pub message_id: MessageId,
