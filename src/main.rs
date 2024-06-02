@@ -1,15 +1,26 @@
+use std::{
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Arc,
+    },
+    time::Duration,
+};
+
 use dotenvy::dotenv;
 
-use tokio::sync::Mutex;
+
+use nagger::Nagger;
+use tokio::sync::{Mutex, RwLock};
 
 use poise::serenity_prelude as serenity;
 
 mod types;
-use types::{Error, State};
+use types::{DiscordMessage, Error, State};
 
 mod commands;
 mod discord;
 mod handlers;
+mod nagger;
 mod poll;
 mod telephone;
 
@@ -21,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
     let intents =
         serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
+    let (tx, rx): (Sender<DiscordMessage>, Receiver<DiscordMessage>) = mpsc::channel();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -45,15 +57,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
                 Ok(State {
                     lock: Mutex::new(()),
                     status: Mutex::new(types::OrpheusStatus::Waiting),
+                    tx,
                 })
             })
         })
         .build();
 
-    let client = serenity::ClientBuilder::new(token, intents)
+    let mut client = serenity::ClientBuilder::new(token, intents)
         .framework(framework)
-        .await;
-    client.unwrap().start().await.unwrap();
+        .await
+        .unwrap();
+
+    let nagger = Arc::new(RwLock::new(Nagger::new()));
+    let http = client.http.clone();
+    nagger.write().await.init(http).await;
+    let rx_nagger = nagger.clone();
+    tokio::spawn(async move {
+        loop {
+            let _m = rx.recv();
+            rx_nagger.write().await.execute().await;
+        }
+    });
+
+    let i_nagger = nagger.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(60));
+
+        loop {
+            interval.tick().await; // This should go first.
+            i_nagger.write().await.execute().await;
+        }
+    });
+
+    client.start().await.unwrap();
 
     tracer_shutdown.shutdown();
 

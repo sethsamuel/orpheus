@@ -1,12 +1,14 @@
 use std::collections::HashSet;
 
+use chrono::Utc;
+
 use crate::{
     discord::thread,
     telephone::{
         consts::{FINISHED, STORY_TELLER},
         Telephone,
     },
-    types::{Context, Error},
+    types::{Context, DiscordMessage, Error},
 };
 
 #[poise::command(slash_command)]
@@ -26,6 +28,7 @@ pub async fn story_time(
         players: vec![],
         finished_players: HashSet::new(),
         nag_interval,
+        nagged_at: Utc::now().into(),
     };
 
     let (channel, message_id) = thread::create(
@@ -61,6 +64,11 @@ pub async fn story_time(
         )
         .await
         .inspect_err(|e| println!("Failed to add emoji! {:?}", e))?;
+
+    _ = ctx.data().tx.send(DiscordMessage {
+        channel_id: channel.id,
+        message_id,
+    });
 
     Ok(())
 }

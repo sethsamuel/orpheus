@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use base64::Engine;
+use chrono::{DateTime, Local, Utc};
 use serde::{Deserialize, Serialize};
 use serenity::all::{
     CacheHttp, ChannelId, Context, CreateMessage, Http, Message, MessageId, Reaction, UserId,
@@ -22,6 +23,7 @@ pub struct Telephone {
     pub players: Vec<UserId>,
     pub finished_players: HashSet<UserId>,
     pub nag_interval: u8,
+    pub nagged_at: DateTime<Local>,
 }
 
 #[derive(Debug)]
@@ -160,6 +162,7 @@ impl Telephone {
                             .content(format!("<@{}> you're up! Watch the latest video, then immediately record your version. Upload it to the link in the thread message and name the file `{}[Your name]`.\n\nOnce you're done, react to the thread message with {}.", next_player_id, self.players.iter().position(|id| id == next_player_id).unwrap(), FINISHED)),
                     )
                     .await;
+                    self.nagged_at = Utc::now().into();
                 } else {
                     _ = ctx
                     .http()
@@ -200,6 +203,7 @@ impl Telephone {
                             .content(format!("<@{}> you're up! Record your story (it should be about two minutes), then upload it to the link in the thread message. You should name the file `0[Your name]`.\n\nOnce you're done, react to the thread message with {}.", self.lead.unwrap(), FINISHED)),
                     )
                     .await;
+                self.nagged_at = Utc::now().into();
             }
             _ => println!(
                 "Unknown reaction for story {:?}",
