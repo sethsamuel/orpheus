@@ -12,16 +12,11 @@ pub async fn set_lead(
     #[rest]
     user: String,
 ) -> Result<(), Error> {
-    let mut status = ctx.data().status.lock().await;
-    *status = OrpheusStatus::Processing;
-    ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom("Processing...")));
-
     let (telephone_option, thread_message) = thread::get::<Telephone>(ctx).await;
     let mut telephone = telephone_option.unwrap();
     println!("{:?}", telephone);
     if telephone.host != ctx.author().id {
-        _ = ctx
+        let _ = ctx
             .reply(format!(
                 "Sorry, only the host (<@{}>) can set the story lead",
                 telephone.host
@@ -40,7 +35,7 @@ pub async fn set_lead(
     match user_id {
         Some(id) => telephone.lead = Some(UserId::new(id)),
         None => {
-            _ = ctx
+            let _ = ctx
                 .reply("You must supply a valid user to take the lead!")
                 .await;
             return Ok(());
@@ -49,17 +44,13 @@ pub async fn set_lead(
 
     telephone.set_lead();
 
-    _ = thread::update(
+    let _ = thread::update(
         ctx.http(),
         thread_message.channel_id,
         thread_message.id,
         telephone,
     )
     .await;
-
-    *status = OrpheusStatus::Waiting;
-    ctx.serenity_context()
-        .set_activity(Some(ActivityData::custom(status.as_str())));
 
     Ok(())
 }
