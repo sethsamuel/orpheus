@@ -50,6 +50,9 @@ impl From<Telephone> for String {
         message_str += value.welcome_line().as_str();
         message_str += "\n\n";
 
+        message_str += value.host().as_str();
+        message_str += "\n\n";
+
         message_str += value.players().as_str();
         message_str += "\n\n";
 

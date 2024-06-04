@@ -8,7 +8,6 @@ use std::{
 
 use dotenvy::dotenv;
 
-
 use nagger::Nagger;
 use tokio::sync::{Mutex, RwLock};
 
@@ -74,14 +73,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let rx_nagger = nagger.clone();
     tokio::spawn(async move {
         loop {
-            let _m = rx.recv();
-            rx_nagger.write().await.execute().await;
+            if let Ok(m) = rx.recv() {
+                if !rx_nagger.read().await.messages.contains(&m) {
+                    rx_nagger.write().await.messages.insert(m);
+                    rx_nagger.write().await.save();
+                    rx_nagger.write().await.execute().await;
+                }
+            }
         }
     });
 
     let i_nagger = nagger.clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_secs(60));
+        let mut interval = tokio::time::interval(Duration::from_secs(10));
 
         loop {
             interval.tick().await; // This should go first.

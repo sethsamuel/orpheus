@@ -1,4 +1,7 @@
-use crate::{poll::consts::FINISHED, telephone::consts::STORY_TELLER};
+use crate::{
+    poll::consts::FINISHED,
+    telephone::consts::{START, STORY_TELLER},
+};
 
 use super::Telephone;
 
@@ -8,7 +11,7 @@ impl Telephone {
     }
 
     pub fn host(&self) -> String {
-        format!("Host: <@{}>", self.host)
+        format!("Host: <@{}> (hit {} to start)", self.host, START)
     }
 
     pub fn players(&self) -> String {

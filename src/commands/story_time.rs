@@ -14,9 +14,6 @@ use crate::{
 #[poise::command(slash_command)]
 pub async fn story_time(
     ctx: Context<'_>,
-    #[description = "Nag every X days"]
-    #[min = 1]
-    nag_interval: u8,
     #[description = "Shared folder"] folder_url: String,
 ) -> Result<(), Error> {
     _ = ctx.defer().await;
@@ -27,7 +24,7 @@ pub async fn story_time(
         lead: None,
         players: vec![],
         finished_players: HashSet::new(),
-        nag_interval,
+        nag_interval: 7,
         nagged_at: Utc::now().into(),
     };
 
