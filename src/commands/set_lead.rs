@@ -1,8 +1,8 @@
-use serenity::all::{ActivityData, UserId};
+use serenity::all::{UserId};
 
 use crate::discord::thread;
 use crate::telephone::Telephone;
-use crate::types::{Context, Error, OrpheusStatus};
+use crate::types::{Context, Error};
 
 #[tracing::instrument]
 #[poise::command(slash_command, prefix_command)]
