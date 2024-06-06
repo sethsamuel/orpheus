@@ -67,5 +67,9 @@ pub async fn story_time(
         message_id,
     });
 
+    _ = ctx
+        .say(format!("Created a new thread <#{}>", channel.id))
+        .await;
+
     Ok(())
 }

@@ -54,8 +54,8 @@ pub async fn set_lead(
 
     _ = ctx
         .say(format!(
-            "Created a new thread <#{}>",
-            thread_message.channel_id
+            "Ok, made <@{}> the first story teller for the game",
+            user_id.unwrap()
         ))
         .await;
 
