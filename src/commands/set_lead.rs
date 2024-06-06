@@ -1,4 +1,4 @@
-use serenity::all::{UserId};
+use serenity::all::UserId;
 
 use crate::discord::thread;
 use crate::telephone::Telephone;
@@ -51,6 +51,13 @@ pub async fn set_lead(
         telephone,
     )
     .await;
+
+    _ = ctx
+        .say(format!(
+            "Created a new thread <#{}>",
+            thread_message.channel_id
+        ))
+        .await;
 
     Ok(())
 }
