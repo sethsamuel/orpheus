@@ -16,7 +16,7 @@ pub struct Nagger {
     pub http: Option<Arc<Http>>,
 }
 
-const NAG_INTERVAL: i64 = 1000 * 60 * 60 * 7;
+const NAG_INTERVAL: i64 = 1000 * 60 * 60 * 24 * 7;
 const   NAG_GIFS: &[&str] =
     &["https://giphy.com/gifs/siliconvalleyhbo-watching-goodbye-window-26BRuo6sLetdllPAQ",
         "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGozbjB3czBjbXhndjVnMzlxd2Y3bjV6OW5zZ2x2NXQweTZ4cnYyOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HlBO7eyXzSZkJri/giphy.gif",
