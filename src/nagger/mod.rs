@@ -36,6 +36,8 @@ impl Nagger {
             http: None,
         }
     }
+
+    #[tracing::instrument]
     pub async fn init(&mut self, http: Arc<Http>) {
         self.http = Some(http.clone());
 
@@ -73,6 +75,7 @@ impl Nagger {
 }
 
 impl Nagger {
+    #[tracing::instrument]
     pub async fn update(&mut self, from_message: DiscordMessage) -> Option<Message> {
         self.http.as_ref()?;
         let http = self.http.as_ref().unwrap();
@@ -92,6 +95,7 @@ impl Nagger {
         None
     }
 
+    #[tracing::instrument]
     pub async fn execute(&mut self) {
         for discord_message in self.messages.clone().iter() {
             let elapsed = Utc::now().timestamp_millis()
