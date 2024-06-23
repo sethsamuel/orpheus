@@ -63,7 +63,7 @@ impl Nagger {
             .iter()
             .map(|m| format!("{},{}", m.channel_id, m.message_id))
             .collect::<Vec<String>>()
-            .join(",");
+            .join("\n");
 
         match fs::write("/tmp/orpheus", str) {
             Ok(_) => println!("Wrote state to file"),
