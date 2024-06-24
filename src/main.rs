@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
 
     let i_nagger = nagger.clone();
     tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_secs(10));
+        let mut interval = tokio::time::interval(Duration::from_secs(60 * 5));
 
         loop {
             interval.tick().await; // This should go first.
