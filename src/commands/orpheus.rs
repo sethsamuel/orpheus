@@ -49,14 +49,16 @@ pub async fn save_me(
     ctx.serenity_context()
         .set_activity(Some(ActivityData::custom("Processing...")));
 
+    println!("Received first_poll_date {:?}", first_poll_date);
     let parsed = match &first_poll_date {
-        Some(str) => NaiveDate::parse_from_str(str.as_str(), "%D").ok(),
+        Some(str) => NaiveDate::parse_from_str(str.trim(), "%m/%d/%Y").ok(),
         _ => None,
     };
     let start_date = match parsed {
         Some(_) => parsed.unwrap(),
         _ => Utc::now().naive_local().date(),
     };
+    println!("Received start_date {}", start_date);
     let end_date = start_date.checked_sub_days(Days::new(1)).unwrap();
     // let start = NaiveDateTime::new(start_date, NaiveTime::from_hms_opt(19, 0, 0).unwrap());
 
