@@ -232,8 +232,13 @@ impl Poll {
         channel_id: ChannelId,
     ) -> Result<(ChannelId, MessageId), ::serenity::Error> {
         let thread_name = format!(
-            "{} - {}",
+            "({}-{}) {}",
             &self.start_date.format("%-m/%-d"),
+            &self
+                .start_date
+                .checked_add_days(Days::new(6))
+                .unwrap()
+                .format("%-m/%-d"),
             &self.event_name,
         );
         let (c, message_id) = thread::create(http, channel_id, &thread_name, self.clone()).await;
