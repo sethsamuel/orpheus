@@ -42,7 +42,6 @@ impl TryFrom<String> for Poll {
         let line = lines.last().unwrap().trim().replace('|', "");
         let base = base64::prelude::BASE64_STANDARD.decode(line).unwrap();
         let str = String::from_utf8(base).unwrap();
-        
 
         serde_json::from_str(&str).map_err(|_| FromStringError)
     }
@@ -232,8 +231,12 @@ impl Poll {
         http: &Http,
         channel_id: ChannelId,
     ) -> Result<(ChannelId, MessageId), ::serenity::Error> {
-        let (c, message_id) =
-            thread::create(http, channel_id, &self.event_name, self.clone()).await;
+        let thread_name = format!(
+            "{} - {}",
+            &self.start_date.format("%-m/%-d"),
+            &self.event_name,
+        );
+        let (c, message_id) = thread::create(http, channel_id, &thread_name, self.clone()).await;
 
         for n in NUMBERS {
             http.create_reaction(
