@@ -15,9 +15,9 @@ serde_json = "1.0.116"
 chrono = "0.4.38"
 regex = "1.10.4"
 base64 = "0.22.1"
-rand = "0.8.5"
+rand = "0.9.2"
 
-datadog-tracing = "0.2.1"
+datadog-tracing = "0.3.0"
 tracing = "0.1.40"
 
 [dependencies.serenity]

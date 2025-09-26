@@ -133,7 +133,7 @@ impl Nagger {
         if user_id.is_none() {
             return;
         }
-        let gif = NAG_GIFS.iter().choose(&mut rand::thread_rng()).unwrap();
+        let gif = NAG_GIFS.iter().choose(&mut rand::rng()).unwrap();
         _ = self
             .http
             .clone()
