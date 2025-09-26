@@ -114,7 +114,7 @@ impl Telephone {
                 .collect();
             println!("{:?}", user_ids);
 
-            user_ids.shuffle(&mut rand::thread_rng());
+            user_ids.shuffle(&mut rand::rng());
             self.players = user_ids;
             self.set_lead();
         }
