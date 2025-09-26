@@ -30,7 +30,7 @@ jobs:
         run: cargo test
   build:
     needs: test
-    runs-on: ubuntun-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
