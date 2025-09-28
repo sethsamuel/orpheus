@@ -6,6 +6,7 @@ use std::{
     time::Duration,
 };
 
+use datadog_tracing::shutdown::TracerShutdown;
 use dotenvy::dotenv;
 
 use nagger::Nagger;
@@ -26,8 +27,10 @@ mod telephone;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     _ = dotenv();
+    let mut tracer_shutdown: Option<TracerShutdown> = None;
     if std::env::var("DD_ENABLED").unwrap_or("".to_string()) == "true" {
-        let (_guard, tracer_shutdown) = datadog_tracing::init()?;
+        let (_guard, shutdown) = datadog_tracing::init()?;
+        tracer_shutdown = Some(shutdown)
     }
 
     let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
@@ -97,7 +100,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
 
     client.start().await.unwrap();
 
-    tracer_shutdown.shutdown();
+    if let Some(shutdown) = tracer_shutdown {
+        shutdown.shutdown();
+    }
 
     Ok(())
 }
