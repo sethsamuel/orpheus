@@ -26,7 +26,9 @@ mod telephone;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     _ = dotenv();
-    let (_guard, tracer_shutdown) = datadog_tracing::init()?;
+    if std::env::var("DD_ENABLED").unwrap_or("".to_string()) == "true" {
+        let (_guard, tracer_shutdown) = datadog_tracing::init()?;
+    }
 
     let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
     let intents =
