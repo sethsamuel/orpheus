@@ -1,5 +1,3 @@
-
-
 use crate::discord::thread;
 use crate::poll::Poll;
 use crate::types::{Context, Error};
@@ -29,6 +27,7 @@ pub async fn add(
         Ok(count) => {
             poll.allowed_truants = count;
             let bot_id = ctx.http().get_current_user().await.unwrap().id;
+
             _ = poll.update_days(
                 ctx.http(),
                 bot_id,

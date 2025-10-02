@@ -25,8 +25,6 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
         .unwrap();
     let message = thread.last().unwrap().clone();
     if let Ok(mut poll) = Poll::try_from(message.content.clone()) {
-        println!("{:?}", poll);
-
         _ = poll
             .update_days(ctx.http(), bot_id, message.channel_id, message.id)
             .await;

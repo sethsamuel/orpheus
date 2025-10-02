@@ -128,33 +128,29 @@ impl Poll {
         let complete_users = self
             .get_finished_users(http, channel_id, message_id, bot_id)
             .await;
+        self.update_days_with_users(
+            bot_id,
+            channel_id,
+            message_id,
+            &complete_users,
+            self.get_user_reactions(http, channel_id, message_id, &complete_users)
+                .await,
+        )
+        .await
+    }
 
+    #[tracing::instrument]
+    pub async fn update_days_with_users(
+        &mut self,
+        bot_id: UserId,
+        channel_id: ChannelId,
+        message_id: MessageId,
+        complete_users: &HashSet<UserId>,
+        user_reactions: HashMap<NumberEmojis, Vec<UserId>>,
+    ) -> Result<(), UpdateDaysError> {
         if complete_users.is_empty() {
             self.eliminated_days.clear();
             return Ok(());
-        }
-        let mut users_map: HashMap<NumberEmojis, Vec<UserId>> = HashMap::new();
-
-        let rs = NUMBERS.iter();
-        let fs: Vec<_> = rs
-            .map(move |r| {
-                discord::get_reaction_users(http, channel_id, message_id, r.as_str().to_string())
-            })
-            .collect();
-
-        let user_reactions = join_all(fs).await;
-        for reactions in user_reactions {
-            let r = reactions.unwrap();
-            let n = r.0.to_string().as_str().try_into().unwrap();
-            let users = r.1;
-            users_map.insert(
-                n,
-                users
-                    .into_iter()
-                    .map(|u| u.id)
-                    .filter(|id| complete_users.contains(id))
-                    .collect(),
-            );
         }
 
         let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
@@ -167,15 +163,19 @@ impl Poll {
             .all(|u| required_users.insert(*u));
 
         let complete_required_users = required_users
-            .intersection(&complete_users)
+            .intersection(complete_users)
             .collect::<HashSet<&UserId>>();
 
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
-            users_map.get(n).unwrap_or(&vec![]).iter().for_each(|_| {
-                day_counts.entry(n).and_modify(|v| *v += 1);
-            });
-            if users_map
+            user_reactions
+                .get(n)
+                .unwrap_or(&vec![])
+                .iter()
+                .for_each(|_| {
+                    day_counts.entry(n).and_modify(|v| *v += 1);
+                });
+            if user_reactions
                 .get(n)
                 .unwrap_or(&vec![])
                 .iter()
@@ -188,7 +188,11 @@ impl Poll {
 
             if complete_required_users.contains(&self.host) {
                 // Host is always required
-                if users_map.get(n).unwrap_or(&vec![]).contains(&self.host) {
+                if user_reactions
+                    .get(n)
+                    .unwrap_or(&vec![])
+                    .contains(&self.host)
+                {
                     eliminated_days.insert(n);
                 }
             }
@@ -218,6 +222,39 @@ impl Poll {
         .map(|u| u.id)
         .filter(|id| *id != bot_id)
         .collect::<HashSet<UserId>>()
+    }
+
+    pub async fn get_user_reactions(
+        &self,
+        http: &Http,
+        channel_id: ChannelId,
+        message_id: MessageId,
+        complete_users: &HashSet<UserId>,
+    ) -> HashMap<NumberEmojis, Vec<UserId>> {
+        let mut users_map: HashMap<NumberEmojis, Vec<UserId>> = HashMap::new();
+
+        let rs = NUMBERS.iter();
+        let fs: Vec<_> = rs
+            .map(move |r| {
+                discord::get_reaction_users(http, channel_id, message_id, r.as_str().to_string())
+            })
+            .collect();
+
+        let user_reactions = join_all(fs).await;
+        for reactions in user_reactions {
+            let r = reactions.unwrap();
+            let n = r.0.to_string().as_str().try_into().unwrap();
+            let users = r.1;
+            users_map.insert(
+                n,
+                users
+                    .into_iter()
+                    .map(|u| u.id)
+                    .filter(|id| complete_users.contains(id))
+                    .collect(),
+            );
+        }
+        users_map
     }
 }
 
