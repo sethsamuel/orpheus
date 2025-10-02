@@ -29,6 +29,10 @@ impl Poll {
         line.to_string()
     }
 
+    pub fn allowed_truants_line(&self) -> String {
+        format!("Allowed truancy: {}", self.allowed_truants)
+    }
+
     pub fn ends_at_line(&self) -> String {
         let end_time =
             NaiveDateTime::new(self.end_date, NaiveTime::from_hms_opt(22, 0, 0).unwrap());

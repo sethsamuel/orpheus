@@ -26,6 +26,7 @@ pub struct Poll {
     pub end_date: NaiveDate,
     pub start_date: NaiveDate,
     pub required_users: HashSet<UserId>,
+    pub allowed_truants: usize,
     #[serde(skip)]
     pub eliminated_days: Vec<NumberEmojis>,
 }
@@ -59,6 +60,11 @@ impl From<Poll> for String {
         message_str += value.required_users_line().as_str();
         message_str += "\n";
         message_str += "\n";
+        if value.allowed_truants > 0 {
+            message_str += value.allowed_truants_line().as_str();
+            message_str += "\n";
+            message_str += "\n";
+        }
         message_str += value.ends_at_line().as_str();
         message_str += "\n";
         message_str += "\n";
@@ -122,33 +128,22 @@ impl Poll {
         let complete_users = self
             .get_finished_users(http, channel_id, message_id, bot_id)
             .await;
+        self.update_days_with_users(
+            &complete_users,
+            self.get_user_reactions(http, channel_id, message_id, &complete_users)
+                .await,
+        )
+    }
 
+    #[tracing::instrument]
+    pub fn update_days_with_users(
+        &mut self,
+        complete_users: &HashSet<UserId>,
+        user_reactions: HashMap<NumberEmojis, Vec<UserId>>,
+    ) -> Result<(), UpdateDaysError> {
         if complete_users.is_empty() {
             self.eliminated_days.clear();
             return Ok(());
-        }
-        let mut users_map: HashMap<NumberEmojis, Vec<UserId>> = HashMap::new();
-
-        let rs = NUMBERS.iter();
-        let fs: Vec<_> = rs
-            .map(move |r| {
-                discord::get_reaction_users(http, channel_id, message_id, r.as_str().to_string())
-            })
-            .collect();
-
-        let user_reactions = join_all(fs).await;
-        for reactions in user_reactions {
-            let r = reactions.unwrap();
-            let n = r.0.to_string().as_str().try_into().unwrap();
-            let users = r.1;
-            users_map.insert(
-                n,
-                users
-                    .into_iter()
-                    .map(|u| u.id)
-                    .filter(|id| complete_users.contains(id))
-                    .collect(),
-            );
         }
 
         let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
@@ -161,28 +156,40 @@ impl Poll {
             .all(|u| required_users.insert(*u));
 
         let complete_required_users = required_users
-            .intersection(&complete_users)
+            .intersection(complete_users)
             .collect::<HashSet<&UserId>>();
 
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
-            users_map.get(n).unwrap_or(&vec![]).iter().for_each(|_| {
-                day_counts.entry(n).and_modify(|v| *v += 1);
-            });
-            println!("{:?}", n);
-            println!("{:?}", users_map);
-            if users_map
+            user_reactions
+                .get(n)
+                .unwrap_or(&vec![])
+                .iter()
+                .for_each(|_| {
+                    day_counts.entry(n).and_modify(|v| *v += 1);
+                });
+            if user_reactions
                 .get(n)
                 .unwrap_or(&vec![])
                 .iter()
                 .filter(|u| required_users.contains(u))
                 .count()
-                != complete_required_users.len()
+                < complete_required_users.len() - self.allowed_truants
             {
                 eliminated_days.insert(n);
             }
+
+            if complete_required_users.contains(&self.host) {
+                // Host is always required
+                if !user_reactions
+                    .get(n)
+                    .unwrap_or(&vec![])
+                    .contains(&self.host)
+                {
+                    eliminated_days.insert(n);
+                }
+            }
         }
-        println!("{:?}", day_counts);
         self.eliminated_days = eliminated_days.iter().map(|n| **n).collect();
 
         Ok(())
@@ -208,6 +215,39 @@ impl Poll {
         .map(|u| u.id)
         .filter(|id| *id != bot_id)
         .collect::<HashSet<UserId>>()
+    }
+
+    pub async fn get_user_reactions(
+        &self,
+        http: &Http,
+        channel_id: ChannelId,
+        message_id: MessageId,
+        complete_users: &HashSet<UserId>,
+    ) -> HashMap<NumberEmojis, Vec<UserId>> {
+        let mut users_map: HashMap<NumberEmojis, Vec<UserId>> = HashMap::new();
+
+        let rs = NUMBERS.iter();
+        let fs: Vec<_> = rs
+            .map(move |r| {
+                discord::get_reaction_users(http, channel_id, message_id, r.as_str().to_string())
+            })
+            .collect();
+
+        let user_reactions = join_all(fs).await;
+        for reactions in user_reactions {
+            let r = reactions.unwrap();
+            let n = r.0.to_string().as_str().try_into().unwrap();
+            let users = r.1;
+            users_map.insert(
+                n,
+                users
+                    .into_iter()
+                    .map(|u| u.id)
+                    .filter(|id| complete_users.contains(id))
+                    .collect(),
+            );
+        }
+        users_map
     }
 }
 
@@ -336,7 +376,12 @@ impl Poll {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{HashMap, HashSet};
+
     use chrono::NaiveDate;
+    use serenity::all::UserId;
+
+    use crate::poll::consts::NumberEmojis;
 
     use super::FromStringError;
 
@@ -353,5 +398,41 @@ mod tests {
         let str: String = String::from(poll.clone());
         let poll2: Result<Poll, FromStringError> = str.try_into();
         assert_eq!(poll, poll2.unwrap());
+    }
+
+    #[test]
+    fn test_update_days_with_users() {
+        use super::Poll;
+        let mut poll = Poll {
+            event_name: "My event!".to_string(),
+            host: 123451234.into(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+            allowed_truants: 1,
+            ..Default::default()
+        };
+
+        let user_1 = UserId::new(1);
+        let user_2 = UserId::new(2);
+
+        let mut complete_users = HashSet::new();
+        complete_users.insert(poll.host);
+
+        let mut user_reactions = HashMap::new();
+        user_reactions.insert(NumberEmojis::One, vec![poll.host, user_1]);
+        user_reactions.insert(NumberEmojis::Two, vec![]);
+        user_reactions.insert(NumberEmojis::Three, vec![user_1, user_2]);
+        user_reactions.insert(NumberEmojis::Four, vec![poll.host, user_2]);
+        user_reactions.insert(NumberEmojis::Five, vec![poll.host, user_1, user_2]);
+
+        let result = poll.update_days_with_users(&complete_users, user_reactions);
+        assert!(result.is_ok());
+
+        // Host trumps day 3
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::One));
+        assert!(poll.eliminated_days.contains(&NumberEmojis::Two));
+        assert!(poll.eliminated_days.contains(&NumberEmojis::Three));
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::Four));
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::Five));
     }
 }

@@ -19,7 +19,6 @@ pub async fn add(
 
     let (poll_option, thread_message) = thread::get::<Poll>(ctx).await;
     let mut poll = poll_option.unwrap();
-    println!("{:?}", poll);
     if poll.host != ctx.author().id {
         _ = ctx
             .reply(format!(
