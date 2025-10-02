@@ -129,22 +129,15 @@ impl Poll {
             .get_finished_users(http, channel_id, message_id, bot_id)
             .await;
         self.update_days_with_users(
-            bot_id,
-            channel_id,
-            message_id,
             &complete_users,
             self.get_user_reactions(http, channel_id, message_id, &complete_users)
                 .await,
         )
-        .await
     }
 
     #[tracing::instrument]
-    pub async fn update_days_with_users(
+    pub fn update_days_with_users(
         &mut self,
-        bot_id: UserId,
-        channel_id: ChannelId,
-        message_id: MessageId,
         complete_users: &HashSet<UserId>,
         user_reactions: HashMap<NumberEmojis, Vec<UserId>>,
     ) -> Result<(), UpdateDaysError> {
@@ -188,7 +181,7 @@ impl Poll {
 
             if complete_required_users.contains(&self.host) {
                 // Host is always required
-                if user_reactions
+                if !user_reactions
                     .get(n)
                     .unwrap_or(&vec![])
                     .contains(&self.host)
@@ -383,7 +376,12 @@ impl Poll {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{HashMap, HashSet};
+
     use chrono::NaiveDate;
+    use serenity::all::{EmojiAction, UserId};
+
+    use crate::poll::consts::NumberEmojis;
 
     use super::FromStringError;
 
@@ -400,5 +398,41 @@ mod tests {
         let str: String = String::from(poll.clone());
         let poll2: Result<Poll, FromStringError> = str.try_into();
         assert_eq!(poll, poll2.unwrap());
+    }
+
+    #[test]
+    fn test_update_days_with_users() {
+        use super::Poll;
+        let mut poll = Poll {
+            event_name: "My event!".to_string(),
+            host: 123451234.into(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+            allowed_truants: 1,
+            ..Default::default()
+        };
+
+        let user_1 = UserId::new(1);
+        let user_2 = UserId::new(2);
+
+        let mut complete_users = HashSet::new();
+        complete_users.insert(poll.host);
+
+        let mut user_reactions = HashMap::new();
+        user_reactions.insert(NumberEmojis::One, vec![poll.host, user_1]);
+        user_reactions.insert(NumberEmojis::Two, vec![]);
+        user_reactions.insert(NumberEmojis::Three, vec![user_1, user_2]);
+        user_reactions.insert(NumberEmojis::Four, vec![poll.host, user_2]);
+        user_reactions.insert(NumberEmojis::Five, vec![poll.host, user_1, user_2]);
+
+        let result = poll.update_days_with_users(&complete_users, user_reactions);
+        assert!(result.is_ok());
+
+        // Host trumps day 3
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::One));
+        assert!(poll.eliminated_days.contains(&NumberEmojis::Two));
+        assert!(poll.eliminated_days.contains(&NumberEmojis::Three));
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::Four));
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::Five));
     }
 }
