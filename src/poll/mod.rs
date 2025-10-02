@@ -26,6 +26,7 @@ pub struct Poll {
     pub end_date: NaiveDate,
     pub start_date: NaiveDate,
     pub required_users: HashSet<UserId>,
+    pub allowed_truants: usize,
     #[serde(skip)]
     pub eliminated_days: Vec<NumberEmojis>,
 }
@@ -59,6 +60,11 @@ impl From<Poll> for String {
         message_str += value.required_users_line().as_str();
         message_str += "\n";
         message_str += "\n";
+        if value.allowed_truants > 0 {
+            message_str += value.allowed_truants_line().as_str();
+            message_str += "\n";
+            message_str += "\n";
+        }
         message_str += value.ends_at_line().as_str();
         message_str += "\n";
         message_str += "\n";
@@ -169,20 +175,24 @@ impl Poll {
             users_map.get(n).unwrap_or(&vec![]).iter().for_each(|_| {
                 day_counts.entry(n).and_modify(|v| *v += 1);
             });
-            println!("{:?}", n);
-            println!("{:?}", users_map);
             if users_map
                 .get(n)
                 .unwrap_or(&vec![])
                 .iter()
                 .filter(|u| required_users.contains(u))
                 .count()
-                != complete_required_users.len()
+                < complete_required_users.len() - self.allowed_truants
             {
                 eliminated_days.insert(n);
             }
+
+            if complete_required_users.contains(&self.host) {
+                // Host is always required
+                if users_map.get(n).unwrap_or(&vec![]).contains(&self.host) {
+                    eliminated_days.insert(n);
+                }
+            }
         }
-        println!("{:?}", day_counts);
         self.eliminated_days = eliminated_days.iter().map(|n| **n).collect();
 
         Ok(())
