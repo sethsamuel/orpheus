@@ -379,7 +379,7 @@ mod tests {
     use std::collections::{HashMap, HashSet};
 
     use chrono::NaiveDate;
-    use serenity::all::{EmojiAction, UserId};
+    use serenity::all::UserId;
 
     use crate::poll::consts::NumberEmojis;
 
