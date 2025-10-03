@@ -1,8 +1,7 @@
 use poise::CreateReply;
-use serenity::all::MessageBuilder;
 
 use crate::discord::thread;
-use crate::poll::Poll;
+use crate::poll::{Poll, ReplyContext};
 use crate::types::{Context, Error};
 
 #[tracing::instrument]
@@ -25,20 +24,12 @@ pub async fn allow_truancy(
         return Ok(());
     }
 
-    let reply = ctx.reply("ok, updating truancy").await;
+    let reply = ctx.reply("Updating truancy...").await.unwrap();
 
     let c = count.parse::<usize>();
     match c {
         Ok(count) => {
             poll.allowed_truants = count;
-            _ = reply
-                .as_ref()
-                .unwrap()
-                .edit(
-                    ctx,
-                    CreateReply::default().content("truancy updated, updating available days..."),
-                )
-                .await;
 
             let bot_id = ctx.http().get_current_user().await.unwrap().id;
 
@@ -48,10 +39,13 @@ pub async fn allow_truancy(
                     bot_id,
                     thread_message.channel_id,
                     thread_message.id,
+                    Some(ReplyContext {
+                        handle: &reply,
+                        ctx: &ctx,
+                    }),
                 )
                 .await;
             _ = reply
-                .unwrap()
                 .edit(
                     ctx,
                     CreateReply::default().content("days updated, updating message..."),

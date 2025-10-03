@@ -9,13 +9,14 @@ use ::serenity::{
 use base64::Engine;
 use chrono::{Datelike, Days, NaiveDate, NaiveTime};
 use consts::{FINISHED, NUMBERS};
-use poise::serenity_prelude as serenity;
+use poise::{serenity_prelude as serenity, CreateReply, ReplyHandle};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, MessageId, UserId};
 use std::collections::{HashMap, HashSet};
 use strings::strip_zero_padding;
 
 use crate::discord::{self, thread};
+use crate::types::{Error, State};
 
 use self::consts::NumberEmojis;
 
@@ -116,23 +117,46 @@ impl From<Poll> for String {
 
 pub struct UpdateDaysError;
 
+pub struct ReplyContext<'a> {
+    pub handle: &'a ReplyHandle<'a>,
+    pub ctx: &'a poise::Context<'a, State, Error>,
+}
+
 impl Poll {
-    #[tracing::instrument]
     pub async fn update_days(
         &mut self,
         http: &Http,
         bot_id: UserId,
         channel_id: ChannelId,
         message_id: MessageId,
+        reply: Option<ReplyContext<'_>>,
     ) -> Result<(), UpdateDaysError> {
+        if let Some(reply) = &reply {
+            _ = reply
+                .handle
+                .edit(
+                    reply.ctx.to_owned(),
+                    CreateReply::default().content("Checking which attendees have responded..."),
+                )
+                .await;
+        }
         let complete_users = self
             .get_finished_users(http, channel_id, message_id, bot_id)
             .await;
-        self.update_days_with_users(
-            &complete_users,
-            self.get_user_reactions(http, channel_id, message_id, &complete_users)
-                .await,
-        )
+        if let Some(reply) = &reply {
+            _ = reply
+                .handle
+                .edit(
+                    reply.ctx.to_owned(),
+                    CreateReply::default().content("Getting availability replies..."),
+                )
+                .await;
+        }
+
+        let user_reactions = self
+            .get_user_reactions(http, channel_id, message_id, &complete_users)
+            .await;
+        self.update_days_with_users(&complete_users, user_reactions)
     }
 
     #[tracing::instrument]
@@ -313,7 +337,7 @@ impl Poll {
         message: Message,
     ) {
         _ = self
-            .update_days(ctx.http(), bot_id, message.channel_id, message.id)
+            .update_days(ctx.http(), bot_id, message.channel_id, message.id, None)
             .await;
         if self.eliminated_days.len() == NUMBERS.len() {
             println!("All days eliminated!");

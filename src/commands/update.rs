@@ -26,7 +26,7 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
     let message = thread.last().unwrap().clone();
     if let Ok(mut poll) = Poll::try_from(message.content.clone()) {
         _ = poll
-            .update_days(ctx.http(), bot_id, message.channel_id, message.id)
+            .update_days(ctx.http(), bot_id, message.channel_id, message.id, None)
             .await;
         if poll.eliminated_days.len() == NUMBERS.len() {
             println!("All days eliminated!");
