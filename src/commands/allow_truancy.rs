@@ -28,12 +28,14 @@ pub async fn allow_truancy(
             poll.allowed_truants = count;
             let bot_id = ctx.http().get_current_user().await.unwrap().id;
 
-            _ = poll.update_days(
-                ctx.http(),
-                bot_id,
-                thread_message.channel_id,
-                thread_message.id,
-            );
+            _ = poll
+                .update_days(
+                    ctx.http(),
+                    bot_id,
+                    thread_message.channel_id,
+                    thread_message.id,
+                )
+                .await;
             _ = poll
                 .update_message(ctx.http(), thread_message.channel_id, thread_message.id)
                 .await;
