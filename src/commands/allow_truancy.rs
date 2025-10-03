@@ -34,14 +34,19 @@ pub async fn allow_truancy(
                 thread_message.channel_id,
                 thread_message.id,
             );
-            _ = poll.update_message(ctx.http(), thread_message.channel_id, thread_message.id);
-            _ = ctx.reply("Allowed truants count updated!")
+            _ = poll
+                .update_message(ctx.http(), thread_message.channel_id, thread_message.id)
+                .await;
+            _ = ctx.reply("Allowed truants count updated!").await.unwrap()
         }
         Err(_) => {
-            _ = ctx.reply(format!(
-                "Invalid count specified. {} is not a positive integer",
-                count
-            ));
+            _ = ctx
+                .reply(format!(
+                    "Invalid count specified. {} is not a positive integer",
+                    count
+                ))
+                .await
+                .unwrap();
         }
     }
 
