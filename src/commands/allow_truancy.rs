@@ -52,7 +52,12 @@ pub async fn allow_truancy(
             _ = poll
                 .update_message(ctx.http(), thread_message.channel_id, thread_message.id)
                 .await;
-            _ = ctx.reply("Allowed truants count updated!").await.unwrap()
+            _ = reply
+                .edit(
+                    ctx,
+                    CreateReply::default().content("Allowed truants count updated"),
+                )
+                .await;
         }
         Err(_) => {
             _ = ctx
