@@ -46,10 +46,7 @@ pub async fn allow_truancy(
                 )
                 .await;
             _ = reply
-                .edit(
-                    ctx,
-                    CreateReply::default().content("days updated, updating message..."),
-                )
+                .edit(ctx, CreateReply::default().content("Updating thread..."))
                 .await;
 
             _ = poll
