@@ -32,9 +32,10 @@ jobs:
       # Runs a single command using the runners shell
       - name: Run tests
         run: cargo test
-  build:
+  build-for-release:
     needs: test
     runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -42,6 +43,5 @@ jobs:
         run: cargo build --release
       - name: Relase
         uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
         with:
           files: target/release/orpheus
