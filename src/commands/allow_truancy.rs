@@ -4,7 +4,7 @@ use crate::types::{Context, Error};
 
 #[tracing::instrument]
 #[poise::command(slash_command, prefix_command)]
-pub async fn add(
+pub async fn allow_truancy(
     ctx: Context<'_>,
     #[description = "Number of allowed truants"]
     #[rest]
@@ -15,7 +15,7 @@ pub async fn add(
     if poll.host != ctx.author().id {
         _ = ctx
             .reply(format!(
-                "Sorry, only the host (<@{}>) can add users",
+                "Sorry, only the host (<@{}>) can change truancy",
                 poll.host
             ))
             .await;

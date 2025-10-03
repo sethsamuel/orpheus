@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use crate::commands::add::add;
+use crate::commands::allow_truancy::allow_truancy;
 use crate::commands::close::close;
 use crate::commands::help::help;
 use crate::commands::nag::nag;
@@ -19,6 +20,7 @@ use serenity::all::ActivityData;
         "help",
         "save_me",
         "add",
+        "allow_truancy",
         "update",
         "nag",
         "close",
