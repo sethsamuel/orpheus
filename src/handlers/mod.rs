@@ -62,7 +62,7 @@ pub async fn on_reaction_change(
                 && reaction
                     .users(ctx.http(), ReactionType::Unicode(ARCHIVE.into()), None, None::<User>)
                     .await?
-                    .iter().find(|u|u.id == poll.host).is_some()
+                    .iter().any(|u|u.id == poll.host)
             {
                 _ = ctx
                     .http()
