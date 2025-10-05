@@ -32,11 +32,20 @@ pub async fn archive(ctx: Context<'_>) -> Result<(), Error> {
 
     _ = ctx
         .http()
-        .delete_channel(ctx.channel_id(), "Voting closed".into())
+        .edit_thread(
+            ctx.channel_id(),
+            &EditThread::new()
+                .locked(true)
+                .auto_archive_duration(AutoArchiveDuration::OneHour),
+            Some("Voting closed"),
+        )
         .await?;
 
     _ = reply
-        .edit(ctx, CreateReply::default().content("Thread archived!"))
+        .edit(
+            ctx,
+            CreateReply::default().content("Thread will be archived in one hour!"),
+        )
         .await;
     *status = OrpheusStatus::Waiting;
     ctx.serenity_context()
