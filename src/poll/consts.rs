@@ -52,3 +52,4 @@ pub const NUMBERS: &[NumberEmojis] = &[
 ];
 
 pub const FINISHED: &str = "✅";
+pub const ARCHIVE: &str = "💀";

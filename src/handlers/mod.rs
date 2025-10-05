@@ -1,13 +1,19 @@
 use ::serenity::all::ActivityData;
 
+use ::serenity::all::AutoArchiveDuration;
 use ::serenity::all::CacheHttp;
 use ::serenity::all::Context;
 
+use ::serenity::all::CreateMessage;
+use ::serenity::all::EditThread;
 use ::serenity::all::Reaction;
 
+use ::serenity::all::ReactionType;
+use ::serenity::all::User;
 use poise::serenity_prelude as serenity;
 
 use crate::discord::thread;
+use crate::poll::consts::ARCHIVE;
 use crate::poll::consts::FINISHED;
 use crate::poll::Poll;
 use crate::telephone::Telephone;
@@ -44,7 +50,44 @@ pub async fn on_reaction_change(
         return Ok(());
     }
 
-    // Ignore reactions that aren't finished
+    if reaction.emoji.unicode_eq(ARCHIVE) {
+        let message = reaction.message(ctx.http()).await.unwrap();
+
+        // Get the poll to check the host
+        if let Ok(poll) = Poll::try_from(message.content.clone()) {
+            println!("{:?}", poll);
+            if Some(poll.host) == reaction.user_id
+                // The reaction change event triggers for both add and remove
+                // so check if the host is still in the list
+                && reaction
+                    .users(ctx.http(), ReactionType::Unicode(ARCHIVE.into()), None, None::<User>)
+                    .await?
+                    .iter().any(|u|u.id == poll.host)
+            {
+                _ = ctx
+                    .http()
+                    .edit_thread(
+                        message.channel_id,
+                        &EditThread::new()
+                            .locked(true)
+                            .auto_archive_duration(AutoArchiveDuration::OneHour),
+                        Some("Voting closed"),
+                    )
+                    .await?;
+                _ = ctx
+                    .http()
+                    .send_message(
+                        message.channel_id,
+                        vec![],
+                        &CreateMessage::new().content("Archiving thread in one hour!"),
+                    )
+                    .await
+                    .unwrap();
+            }
+        }
+    }
+
+    // Ignore other reactions that aren't finished
     if !reaction.emoji.unicode_eq(FINISHED) {
         return Ok(());
     }
