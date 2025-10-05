@@ -8,6 +8,7 @@ use ::serenity::all::Reaction;
 use poise::serenity_prelude as serenity;
 
 use crate::discord::thread;
+use crate::poll::consts::FINISHED;
 use crate::poll::Poll;
 use crate::telephone::Telephone;
 use crate::types::DiscordMessage;
@@ -40,6 +41,11 @@ pub async fn on_reaction_change(
 ) -> Result<(), Error> {
     let bot_id = ctx.http().get_current_user().await.unwrap().id;
     if reaction.user_id.unwrap() == bot_id {
+        return Ok(());
+    }
+
+    // Ignore reactions that aren't finished
+    if !reaction.emoji.unicode_eq(FINISHED) {
         return Ok(());
     }
 
