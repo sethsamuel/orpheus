@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use crate::commands::add::add;
 use crate::commands::allow_truancy::allow_truancy;
+use crate::commands::archive::archive;
 use crate::commands::close::close;
 use crate::commands::help::help;
 use crate::commands::nag::nag;
@@ -24,6 +25,7 @@ use serenity::all::ActivityData;
         "update",
         "nag",
         "close",
+        "archive",
         "next_dates",
         "story_time",
         "set_lead"
