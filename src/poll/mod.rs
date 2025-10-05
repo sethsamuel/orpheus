@@ -181,6 +181,11 @@ impl Poll {
             .intersection(complete_users)
             .collect::<HashSet<&UserId>>();
 
+        println!(
+            "Updating days with host {:?}, complete required users: {:?}, reactions: {:?}",
+            self.host, complete_required_users, user_reactions
+        );
+
         for n in NUMBERS.iter() {
             day_counts.insert(n, 0);
             user_reactions
@@ -211,6 +216,8 @@ impl Poll {
                 }
             }
         }
+
+        println!("Found eliminated days {:?}", eliminated_days);
         self.eliminated_days = eliminated_days.iter().map(|n| **n).collect();
 
         Ok(())
