@@ -30,12 +30,9 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    let thread = channel
-        .messages(ctx.http(), GetMessages::new())
-        .await
-        .unwrap();
-    let message = thread.last().unwrap().clone();
-    if let Ok(mut poll) = Poll::try_from(message.content.clone()) {
+    let (poll_option, message) = thread::get::<Poll>(ctx).await;
+
+    if let Some(mut poll) = poll_option {
         _ = poll
             .update_days(
                 ctx.http(),

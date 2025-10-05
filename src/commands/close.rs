@@ -20,7 +20,6 @@ pub async fn close(ctx: Context<'_>) -> Result<(), Error> {
         .unwrap();
     let thread_message = thread.last().unwrap().clone();
     let poll = Poll::try_from(thread_message.content.clone()).unwrap();
-    println!("{:?}", poll);
     if poll.host != ctx.author().id {
         _ = ctx
             .reply(format!(

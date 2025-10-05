@@ -45,7 +45,10 @@ impl TryFrom<String> for Poll {
         let base = base64::prelude::BASE64_STANDARD.decode(line).unwrap();
         let str = String::from_utf8(base).unwrap();
 
-        serde_json::from_str(&str).map_err(|_| FromStringError)
+        serde_json::from_str(&str).map_err(|err| {
+            println!("Error decoding string {:?}", err);
+            FromStringError
+        })
     }
 }
 
@@ -172,14 +175,9 @@ impl Poll {
 
         let mut day_counts: HashMap<&NumberEmojis, usize> = HashMap::new();
         let mut eliminated_days: HashSet<&NumberEmojis> = HashSet::new();
-        let mut required_users: HashSet<UserId> = HashSet::new();
-        required_users.insert(self.host);
-        let poll_required_users = self.required_users.clone();
-        poll_required_users
-            .iter()
-            .all(|u| required_users.insert(*u));
 
-        let complete_required_users = required_users
+        let complete_required_users = self
+            .required_users
             .intersection(complete_users)
             .collect::<HashSet<&UserId>>();
 
@@ -189,15 +187,12 @@ impl Poll {
                 .get(n)
                 .unwrap_or(&vec![])
                 .iter()
-                .for_each(|_| {
-                    day_counts.entry(n).and_modify(|v| *v += 1);
+                .for_each(|u| {
+                    if complete_required_users.contains(u) {
+                        day_counts.entry(n).and_modify(|v| *v += 1);
+                    }
                 });
-            if user_reactions
-                .get(n)
-                .unwrap_or(&vec![])
-                .iter()
-                .filter(|u| required_users.contains(u))
-                .count()
+            if *day_counts.get(n).unwrap_or(&0)
                 < complete_required_users
                     .len()
                     .saturating_sub(self.allowed_truants)
@@ -205,7 +200,7 @@ impl Poll {
                 eliminated_days.insert(n);
             }
 
-            if complete_required_users.contains(&self.host) {
+            if complete_users.contains(&self.host) {
                 // Host is always required
                 if !user_reactions
                     .get(n)
