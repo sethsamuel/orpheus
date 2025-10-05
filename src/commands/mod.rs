@@ -1,5 +1,6 @@
 pub mod add;
 pub mod allow_truancy;
+pub mod archive;
 pub mod close;
 pub mod help;
 pub mod nag;

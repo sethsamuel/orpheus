@@ -47,6 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
                 commands::add::add(),
                 commands::update::update(),
                 commands::close::close(),
+                commands::archive::archive(),
                 commands::next_dates::next_dates(),
                 commands::nag::nag(),
             ],

@@ -6,7 +6,7 @@ use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(prefix_command)]
 pub async fn add(
     ctx: Context<'_>,
     #[description = "Users"]
