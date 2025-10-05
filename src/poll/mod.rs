@@ -169,6 +169,7 @@ impl Poll {
         user_reactions: HashMap<NumberEmojis, Vec<UserId>>,
     ) -> Result<(), UpdateDaysError> {
         if complete_users.is_empty() {
+            println!("No completed users, clearing eliminated days");
             self.eliminated_days.clear();
             return Ok(());
         }
@@ -182,8 +183,8 @@ impl Poll {
             .collect::<HashSet<&UserId>>();
 
         println!(
-            "Updating days with host {:?}, complete required users: {:?}, reactions: {:?}",
-            self.host, complete_required_users, user_reactions
+            "Updating days with host {:?}, truancy {:?}, complete required users: {:?}, reactions: {:?}",
+            self.host, self.allowed_truants, complete_required_users, user_reactions
         );
 
         for n in NUMBERS.iter() {

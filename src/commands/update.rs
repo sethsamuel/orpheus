@@ -1,11 +1,20 @@
 use poise::CreateReply;
-use serenity::all::GetMessages;
 
 use crate::discord::thread;
 use crate::poll::consts::NUMBERS;
 use crate::poll::{Poll, ReplyContext};
 use crate::telephone::Telephone;
 use crate::types::{Context, Error, OrpheusStatus};
+use std::fmt;
+
+#[derive(Debug, Clone)]
+pub struct BadThreadError;
+impl fmt::Display for BadThreadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Invalid thread")
+    }
+}
+impl std::error::Error for BadThreadError {}
 
 #[tracing::instrument]
 #[poise::command(slash_command, prefix_command)]
@@ -17,6 +26,15 @@ pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
     let reply = ctx.reply("Updating...").await.unwrap();
 
     let channel = ctx.guild_channel().await.unwrap();
+    if channel.thread_metadata.is_none() {
+        let _ = reply
+            .edit(
+                ctx,
+                CreateReply::default().content("This doesn't look like a valid thread"),
+            )
+            .await;
+        return Err(BadThreadError.into());
+    }
 
     if channel.thread_metadata.unwrap().locked {
         *status = OrpheusStatus::Waiting;

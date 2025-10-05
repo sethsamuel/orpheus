@@ -31,14 +31,25 @@ where
     T: TryFrom<String>,
     T::Error: Debug,
 {
-    let thread = ctx
-        .guild_channel()
-        .await
-        .unwrap()
+    let thread = ctx.guild_channel().await.unwrap();
+    if thread.thread_metadata.is_none() {
+        println!("Tried to get thread but got other channel {:?}", thread);
+        return (
+            None,
+            thread
+                .messages(ctx.http(), GetMessages::new())
+                .await
+                .unwrap()
+                .last()
+                .unwrap()
+                .clone(),
+        );
+    }
+    let messages = thread
         .messages(ctx.http(), GetMessages::new())
         .await
         .unwrap();
-    let thread_message = thread.last().unwrap().clone();
+    let thread_message = messages.last().unwrap().clone();
     let object = try_from(&thread_message);
 
     (object, thread_message)
