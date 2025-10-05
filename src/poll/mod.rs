@@ -341,6 +341,9 @@ impl Poll {
         reaction: &Reaction,
         message: Message,
     ) {
+        if !reaction.emoji.unicode_eq(FINISHED) {
+            return;
+        }
         _ = self
             .update_days(ctx.http(), bot_id, message.channel_id, message.id, None)
             .await;
