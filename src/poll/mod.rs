@@ -198,7 +198,9 @@ impl Poll {
                 .iter()
                 .filter(|u| required_users.contains(u))
                 .count()
-                < complete_required_users.len() - self.allowed_truants
+                < complete_required_users
+                    .len()
+                    .saturating_sub(self.allowed_truants)
             {
                 eliminated_days.insert(n);
             }
