@@ -8,6 +8,8 @@ use ::serenity::all::CreateMessage;
 use ::serenity::all::EditThread;
 use ::serenity::all::Reaction;
 
+use ::serenity::all::ReactionType;
+use ::serenity::all::User;
 use poise::serenity_prelude as serenity;
 
 use crate::discord::thread;
@@ -54,7 +56,14 @@ pub async fn on_reaction_change(
         // Get the poll to check the host
         if let Ok(poll) = Poll::try_from(message.content.clone()) {
             println!("{:?}", poll);
-            if Some(poll.host) == reaction.user_id {
+            if Some(poll.host) == reaction.user_id
+                // The reaction change event triggers for both add and remove
+                // so check if the host is still in the list
+                && reaction
+                    .users(ctx.http(), ReactionType::Unicode(ARCHIVE.into()), None, None::<User>)
+                    .await?
+                    .iter().find(|u|u.id == poll.host).is_some()
+            {
                 _ = ctx
                     .http()
                     .edit_thread(
