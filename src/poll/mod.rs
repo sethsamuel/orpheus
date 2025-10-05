@@ -433,20 +433,21 @@ mod tests {
     #[test]
     fn test_update_days_with_users() {
         use super::Poll;
+        let user_1 = UserId::new(1);
+        let user_2 = UserId::new(2);
+        let user_3 = UserId::new(3);
+
         let mut poll = Poll {
             event_name: "My event!".to_string(),
             host: 123451234.into(),
             end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
             start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+            required_users: HashSet::from([user_1, user_2]),
             allowed_truants: 1,
             ..Default::default()
         };
 
-        let user_1 = UserId::new(1);
-        let user_2 = UserId::new(2);
-
-        let mut complete_users = HashSet::new();
-        complete_users.insert(poll.host);
+        let complete_users = HashSet::from([poll.host, user_1, user_2, user_3]);
 
         let mut user_reactions = HashMap::new();
         user_reactions.insert(NumberEmojis::One, vec![poll.host, user_1]);
@@ -454,6 +455,7 @@ mod tests {
         user_reactions.insert(NumberEmojis::Three, vec![user_1, user_2]);
         user_reactions.insert(NumberEmojis::Four, vec![poll.host, user_2]);
         user_reactions.insert(NumberEmojis::Five, vec![poll.host, user_1, user_2]);
+        user_reactions.insert(NumberEmojis::Six, vec![poll.host, user_2, user_3]);
 
         let result = poll.update_days_with_users(&complete_users, user_reactions);
         assert!(result.is_ok());
@@ -464,5 +466,38 @@ mod tests {
         assert!(poll.eliminated_days.contains(&NumberEmojis::Three));
         assert!(!poll.eliminated_days.contains(&NumberEmojis::Four));
         assert!(!poll.eliminated_days.contains(&NumberEmojis::Five));
+        assert!(!poll.eliminated_days.contains(&NumberEmojis::Six));
+    }
+
+    #[test]
+    fn test_update_days_with_users_with_other_user() {
+        use super::Poll;
+        let user_1 = UserId::new(1);
+
+        let mut poll = Poll {
+            event_name: "My event!".to_string(),
+            host: 123451234.into(),
+            end_date: NaiveDate::from_ymd_opt(2024, 2, 11).unwrap(),
+            start_date: NaiveDate::from_ymd_opt(2024, 2, 18).unwrap(),
+            required_users: HashSet::from([]),
+            allowed_truants: 1,
+            ..Default::default()
+        };
+
+        let complete_users = HashSet::from([user_1]);
+
+        let mut user_reactions = HashMap::new();
+        user_reactions.insert(NumberEmojis::One, vec![]);
+        user_reactions.insert(NumberEmojis::Two, vec![]);
+        user_reactions.insert(NumberEmojis::Three, vec![]);
+        user_reactions.insert(NumberEmojis::Four, vec![]);
+        user_reactions.insert(NumberEmojis::Five, vec![]);
+        user_reactions.insert(NumberEmojis::Six, vec![]);
+
+        let result = poll.update_days_with_users(&complete_users, user_reactions);
+        assert!(result.is_ok());
+
+        // Host trumps day 3
+        assert!(poll.eliminated_days.is_empty());
     }
 }
