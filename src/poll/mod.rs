@@ -27,6 +27,7 @@ pub struct Poll {
     pub end_date: NaiveDate,
     pub start_date: NaiveDate,
     pub required_users: HashSet<UserId>,
+    #[serde(default)]
     pub allowed_truants: usize,
     #[serde(skip)]
     pub eliminated_days: Vec<NumberEmojis>,
