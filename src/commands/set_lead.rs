@@ -5,7 +5,7 @@ use crate::telephone::Telephone;
 use crate::types::{Context, Error};
 
 #[tracing::instrument]
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(prefix_command)]
 pub async fn set_lead(
     ctx: Context<'_>,
     #[description = "User"]

@@ -17,7 +17,7 @@ impl fmt::Display for BadThreadError {
 impl std::error::Error for BadThreadError {}
 
 #[tracing::instrument]
-#[poise::command(slash_command, prefix_command)]
+#[poise::command(prefix_command)]
 pub async fn update(ctx: Context<'_>) -> Result<(), Error> {
     let mut status = ctx.data().status.lock().await;
     *status = OrpheusStatus::Processing;
