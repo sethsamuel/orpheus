@@ -4,7 +4,7 @@ use crate::poll::Poll;
 use crate::types::{Context, Error};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command)]
 pub async fn nag(ctx: Context<'_>) -> Result<(), Error> {
     let thread = ctx
         .guild_channel()

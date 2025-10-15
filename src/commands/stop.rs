@@ -3,7 +3,7 @@ use serenity::all::ActivityData;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command)]
 pub async fn stop(ctx: Context<'_>) -> Result<(), Error> {
     if ctx.author().id != 378323967158517763 && ctx.author().id != 606692751752429585 {
         _ = ctx

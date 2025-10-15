@@ -5,7 +5,7 @@ use crate::poll::{Poll, ReplyContext};
 use crate::types::{Context, Error};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command)]
 pub async fn allow_truancy(
     ctx: Context<'_>,
     #[description = "Number of allowed truants"]

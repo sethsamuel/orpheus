@@ -6,7 +6,7 @@ use crate::poll::Poll;
 use crate::types::{Context, Error, OrpheusStatus};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command)]
 pub async fn archive(ctx: Context<'_>) -> Result<(), Error> {
     let mut status = ctx.data().status.lock().await;
     *status = OrpheusStatus::Processing;

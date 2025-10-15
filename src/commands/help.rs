@@ -2,7 +2,7 @@ use crate::poll::consts::FINISHED;
 use crate::types::{Context, Error};
 
 #[tracing::instrument]
-#[poise::command(prefix_command)]
+#[poise::command(slash_command)]
 pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
     _ = ctx.reply(format!("Hi, I'm your friendly neighborhood bot, Orpheus! I help you escape scheduling hell, mostly.
     
